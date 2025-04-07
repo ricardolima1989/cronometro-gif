@@ -872,6 +872,21 @@ animarBarraProgresso(() => {
 });
 
 
+function animarBarraProgresso(callback) {
+  const bar = document.getElementById("progressBar");
+  let progresso = 0;
+  const intervalo = setInterval(() => {
+    progresso += 1;
+    bar.style.width = `${progresso}%`;
+    if (progresso >= 100) {
+      clearInterval(intervalo);
+      callback(); // Chama função após barra completar
+    }
+  }, 50); // 50ms * 100 = 5s
+}
+
+
+
 </script>
 
 
