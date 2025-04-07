@@ -1,6 +1,6 @@
 {
   "name": "cronometro-gif",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Cronômetro com geração de GIF via Node.js",
   "main": "server.js",
   "scripts": {

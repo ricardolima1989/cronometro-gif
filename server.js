@@ -11,7 +11,14 @@ app.use(express.static('public'));
 
 app.post('/api/gerar-gif', async (req, res) => {
   try {
+    console.log("Recebendo frames do cliente...");
     const frames = req.body.frames;
+
+    if (!frames || frames.length === 0) {
+      console.error("Nenhum frame recebido.");
+      return res.status(400).json({ error: "Nenhum frame recebido." });
+    }
+
     const width = 200, height = 200;
     const encoder = new GIFEncoder(width, height);
     const fileName = `cronometro-${Date.now()}.gif`;
@@ -37,11 +44,12 @@ app.post('/api/gerar-gif', async (req, res) => {
     encoder.finish();
 
     stream.on('finish', () => {
+      console.log("GIF gerado com sucesso:", filePath);
       res.json({ url: `/gif/${fileName}` });
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("Erro ao gerar GIF:", err);
     res.status(500).json({ error: 'Erro ao gerar GIF' });
   }
 });
