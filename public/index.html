@@ -5,49 +5,680 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cronômetro com GIF via Servidor</title>
   <style>
-    body { background: #121212; color: white; font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-    #canvas { display: block; margin: 20px auto; background: #000; }
-    #gifPreview { display: none; margin-top: 20px; max-width: 100%; border: 2px solid #00e676; border-radius: 10px; }
-    #downloadBtn { display: none; margin-top: 20px; background: yellow; color: black; padding: 12px 24px;
-      font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; }
-    #status { margin-top: 10px; }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      background: #f4f4f4;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      width: 100%;
+      max-width: 1440px;
+    }
+    .col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .secao {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    .secao h2 {
+      font-size: 14px;
+      margin: 0 0 10px;
+      color: #444;
+    }
+    .grupo {
+      margin-bottom: 8px;
+    }
+    .grupo label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 4px;
+    }
+    .linha-color {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .linha-color input[type="color"] {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: none;
+    }
+    .linha-color input[type="text"] {
+      flex: 1;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    .linha-check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    select, input[type="range"], input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 16px;
+      width: 100%;
+      padding: 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    /* Botão reset com estilo discreto */
+    .btn-reset {
+      margin-top: 8px;
+      width: 100%;
+      padding: 10px;
+      background: #ccc;
+      color: #333;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    /* Botões desabilitados */
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      color: #000;
+    }
+    #status {
+      margin-top: 8px;
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+    }
+    canvas {
+      background: transparent;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.2);
+    }
+    .preview {
+      text-align: center;
+    }
+    h1 {
+      grid-column: span 4;
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    /* Responsividade: em telas menores que 768px, empilha as colunas */
+@media (max-width: 768px) {
+  .container {
+    grid-template-columns: 1fr; /* Força uma única coluna */
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	
+	
+	
+  }
+  .col {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  canvas {
+    max-width: 100%;
+    height: auto;
+  }
+}
   </style>
 </head>
 <body>
-  <h1>Cronômetro com GIF via Servidor</h1>
-  <button onclick="iniciarContagem()">Gerar GIF</button>
-  <div id="status"></div>
-  <canvas id="canvas" width="200" height="200"></canvas>
-  <img id="gifPreview" alt="GIF gerado" />
-  <a id="downloadBtn" download="cronometro.gif">Baixar GIF</a>
+  <div class="container">
+    <h1>Cronômetro com GIF via Servidor</h1>
+    
+    <!-- Coluna 1: Timer, Círculo e Borda -->
+    <div class="col">
+      <!-- Valor Inicial do Timer -->
+      <div class="secao">
+        <h2>Valor Inicial do Timer</h2>
+        <div class="grupo">
+          <label for="initialTime">Defina o tempo inicial (segundos):</label>
+          <input type="number" id="initialTime" value="30" min="1" />
+        </div>
+      </div>
+      <!-- Configuração do Círculo -->
+      <div class="secao">
+        <h2>Configuração do Círculo</h2>
+        <div class="grupo">
+          <div class="linha-check">
+            <input type="checkbox" id="circuloTransparente" onchange="atualizarCampo('circulo')">
+            <label for="circuloTransparente">Círculo transparente</label>
+          </div>
+          <label>Cor do círculo:</label>
+          <div class="linha-color">
+            <input type="color" id="corCirculo" value="#4A90E2" />
+            <input type="text" id="hexCirculo" value="#4A90E2" />
+          </div>
+        </div>
+        <div class="grupo">
+          <label for="grossuraCirculo">
+            Grossura do círculo: <span id="displayGrossuraCirculo">28</span> px
+          </label>
+          <input type="range" id="grossuraCirculo" min="1" max="40" value="28" />
+        </div>
+        <div class="grupo">
+          <div class="linha-check">
+            <input type="checkbox" id="circuloContornoAtivo" onchange="toggleContorno('circulo')">
+            <label for="circuloContornoAtivo">Ativar contorno do círculo</label>
+          </div>
+        </div>
+        <div id="grupoCirculoContorno" style="display: none;">
+          <div class="grupo">
+            <label>Cor do contorno do círculo:</label>
+            <div class="linha-color">
+              <input type="color" id="corCirculoContorno" value="#000000" />
+              <input type="text" id="hexCirculoContorno" value="#000000" />
+            </div>
+          </div>
+          <div class="grupo">
+            <label for="grossuraCirculoContorno">
+              Grossura do contorno: <span id="displayGrossuraCirculoContorno">2</span> px
+            </label>
+            <input type="range" id="grossuraCirculoContorno" min="1" max="20" value="2" />
+          </div>
+          <div class="grupo">
+            <label>Tipo de linha:</label>
+            <select id="tipoCirculoContorno">
+              <option value="solid">Sólido</option>
+              <option value="dashed">Tracejado</option>
+              <option value="dotted">Pontilhado</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <!-- Configuração da Borda -->
+      <div class="secao">
+        <h2>Configuração da Borda</h2>
+        <div class="grupo">
+          <div class="linha-check">
+            <input type="checkbox" id="bordaTransparente" onchange="atualizarCampo('borda')">
+            <label for="bordaTransparente">Borda transparente</label>
+          </div>
+          <label>Cor da borda:</label>
+          <div class="linha-color">
+            <input type="color" id="corBorda" value="#2D3E50" />
+            <input type="text" id="hexBorda" value="#2D3E50" />
+          </div>
+        </div>
+        <div class="grupo">
+          <label for="grossuraBorda">
+            Grossura da borda: <span id="displayGrossuraBorda">5</span> px
+          </label>
+          <input type="range" id="grossuraBorda" min="1" max="40" value="5" />
+        </div>
+        <div class="grupo">
+          <div class="linha-check">
+            <input type="checkbox" id="bordaContornoAtivo" onchange="toggleContorno('borda')">
+            <label for="bordaContornoAtivo">Ativar contorno da borda</label>
+          </div>
+        </div>
+        <div id="grupoBordaContorno" style="display: none;">
+          <div class="grupo">
+            <label>Cor do contorno da borda:</label>
+            <div class="linha-color">
+              <input type="color" id="corBordaContorno" value="#000000" />
+              <input type="text" id="hexBordaContorno" value="#000000" />
+            </div>
+          </div>
+          <div class="grupo">
+            <label for="grossuraBordaContorno">
+              Grossura do contorno: <span id="displayGrossuraBordaContorno">2</span> px
+            </label>
+            <input type="range" id="grossuraBordaContorno" min="1" max="20" value="2" />
+          </div>
+          <div class="grupo">
+            <label>Tipo de linha:</label>
+            <select id="tipoBordaContorno">
+              <option value="solid">Sólido</option>
+              <option value="dashed">Tracejado</option>
+              <option value="dotted">Pontilhado</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Coluna 2: Texto e Fundo -->
+    <div class="col">
+      <!-- Configuração do Texto -->
+      <div class="secao">
+        <h2>Configuração do Texto</h2>
+        <div class="grupo">
+          <label>Cor do texto:</label>
+          <div class="linha-color">
+            <input type="color" id="corTexto" value="#ffffff" />
+            <input type="text" id="hexTexto" value="#ffffff" />
+          </div>
+        </div>
+        <div class="grupo">
+          <label for="tamanhoTexto">
+            Tamanho do texto: <span id="displayTamanhoTexto">90</span> px
+          </label>
+          <input type="range" id="tamanhoTexto" min="10" max="100" value="90" />
+        </div>
+        <div class="grupo">
+          <div class="linha-check">
+            <input type="checkbox" id="textoContornoAtivo" onchange="toggleContorno('texto')">
+            <label for="textoContornoAtivo">Ativar contorno do texto</label>
+          </div>
+        </div>
+        <div id="grupoTextoContorno" style="display: none;">
+          <div class="grupo">
+            <label>Cor do contorno do texto:</label>
+            <div class="linha-color">
+              <input type="color" id="corTextoContorno" value="#000000" />
+              <input type="text" id="hexTextoContorno" value="#000000" />
+            </div>
+          </div>
+          <div class="grupo">
+            <label for="grossuraTextoContorno">
+              Grossura do contorno: <span id="displayGrossuraTextoContorno">2</span> px
+            </label>
+            <input type="range" id="grossuraTextoContorno" min="1" max="20" value="2" />
+          </div>
+          <div class="grupo">
+            <label>Tipo de linha:</label>
+            <select id="tipoTextoContorno">
+              <option value="solid">Sólido</option>
+              <option value="dashed">Tracejado</option>
+              <option value="dotted">Pontilhado</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <!-- Configuração do Fundo -->
+      <div class="secao">
+        <h2>Configuração do Fundo</h2>
+        <div class="grupo">
+          <div class="linha-check">
+            <input type="checkbox" id="fundoTransparente" checked onchange="atualizarCampo('fundo')">
+            <label for="fundoTransparente">Fundo transparente</label>
+          </div>
+          <label>Cor do fundo:</label>
+          <div class="linha-color">
+            <input type="color" id="corFundo" value="#000000" disabled />
+            <input type="text" id="hexFundo" value="transparent" disabled />
+          </div>
+        </div>
+        <div class="grupo">
+          <div class="linha-check">
+            <input type="checkbox" id="fundoContornoAtivo" onchange="toggleContorno('fundo')">
+            <label for="fundoContornoAtivo">Ativar contorno do fundo</label>
+          </div>
+        </div>
+        <div id="grupoFundoContorno" style="display: none;">
+          <div class="grupo">
+            <label>Cor do contorno do fundo:</label>
+            <div class="linha-color">
+              <input type="color" id="corFundoContorno" value="#000000" />
+              <input type="text" id="hexFundoContorno" value="#000000" />
+            </div>
+          </div>
+          <div class="grupo">
+            <label for="grossuraFundoContorno">
+              Grossura do contorno: <span id="displayGrossuraFundoContorno">2</span> px
+            </label>
+            <input type="range" id="grossuraFundoContorno" min="1" max="20" value="2" />
+          </div>
+          <div class="grupo">
+            <label>Tipo de linha:</label>
+            <select id="tipoFundoContorno">
+              <option value="solid">Sólido</option>
+              <option value="dashed">Tracejado</option>
+              <option value="dotted">Pontilhado</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Coluna 3: Sombra e Traçado do Círculo -->
+    <div class="col">
+      <!-- Configuração da Sombra -->
+      <div class="secao">
+        <h2>Configuração da Sombra</h2>
+        <div class="grupo">
+          <div class="linha-check">
+            <input type="checkbox" id="sombraTransparente" onchange="toggleSombra()">
+            <label for="sombraTransparente">Sombra transparente</label>
+          </div>
+          <label>Cor da sombra:</label>
+          <div class="linha-color">
+            <input type="color" id="corSombra" value="#000000" />
+            <input type="text" id="hexSombra" value="#000000" />
+          </div>
+        </div>
+        <div id="grupoSombra">
+          <div class="grupo">
+            <label>Intensidade da sombra:</label>
+            <input type="range" id="sombra" min="0" max="30" value="8" />
+          </div>
+          <div class="grupo">
+            <label>Direção da sombra (horizontal):</label>
+            <input type="range" id="sombraX" min="-30" max="30" value="4" />
+          </div>
+          <div class="grupo">
+            <label>Direção da sombra (vertical):</label>
+            <input type="range" id="sombraY" min="-30" max="30" value="4" />
+          </div>
+        </div>
+        <button onclick="iniciarContagem()">Gerar GIF</button>
+        <button class="btn-reset" onclick="resetarPadroes()">Resetar Padrões</button>
+        <div id="status">Aguardando...</div>
+      </div>
+      <!-- Traçado do Círculo -->
+      <div class="secao">
+        <h2>Traçado do Círculo</h2>
+        <div class="grupo">
+          <label>Tipo de traço do círculo:</label>
+          <select id="tipoTraco">
+            <option value="solid" selected>Sólido</option>
+            <option value="dashed">Tracejado</option>
+            <option value="dotted">Pontilhado</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Coluna 4: Pré-visualização e GIF final para download -->
+    <div class="col preview">
+      <div class="secao">
+        <canvas id="canvas" width="300" height="300"></canvas>
+        <p style="margin-top: 12px;">Pré-visualização</p>
+      </div>
+      <div class="secao">
+        <h2>GIF Final para Download</h2>
+        <div id="gifDownload">
+          <p>Aguardando...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
   <script>
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-    const preview = document.getElementById("gifPreview");
-    const downloadBtn = document.getElementById("downloadBtn");
     const status = document.getElementById("status");
-    const tempoTotal = 31;
+    const gifDownload = document.getElementById("gifDownload");
     let frames = [];
-
+    let tempoTotal = parseInt(document.getElementById("initialTime").value) || 30;
+    let sombraAnterior = "#000000";
+    
+    function hex(id) {
+      return document.getElementById(`hex${id}`).value || "transparent";
+    }
+    function capitalize(s) {
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+    
+    function desabilitarControles() {
+      const controles = document.querySelectorAll(".container input, .container select, .container button");
+      controles.forEach((el) => { el.disabled = true; });
+    }
+    function habilitarControles() {
+      const controles = document.querySelectorAll(".container input, .container select, .container button");
+      controles.forEach((el) => { el.disabled = false; });
+      if (document.getElementById("fundoTransparente").checked) {
+        document.getElementById("corFundo").disabled = true;
+        document.getElementById("hexFundo").disabled = true;
+      }
+      if (document.getElementById("sombraTransparente").checked) {
+        document.getElementById("corSombra").disabled = true;
+        document.getElementById("hexSombra").disabled = true;
+      }
+    }
+    
+    function atualizarCampo(tipo) {
+      if (document.getElementById(`cor${capitalize(tipo)}`) &&
+          document.getElementById(`hex${capitalize(tipo)}`)) {
+        const cb = document.getElementById(`${tipo}Transparente`) ||
+                   document.getElementById(`${tipo}ContornoAtivo`);
+        const color = document.getElementById(`cor${capitalize(tipo)}`);
+        const hexField = document.getElementById(`hex${capitalize(tipo)}`);
+        if (cb && cb.checked) {
+          hexField.value = "transparent";
+          color.disabled = true;
+          hexField.disabled = true;
+        } else {
+          color.disabled = false;
+          hexField.disabled = false;
+          hexField.value = color.value;
+        }
+      }
+      desenharFrame(0, tempoTotal);
+    }
+    
+    function toggleContorno(tipo) {
+      const check = document.getElementById(`${tipo}ContornoAtivo`);
+      const grupo = document.getElementById(`grupo${capitalize(tipo)}Contorno`);
+      grupo.style.display = check.checked ? "block" : "none";
+      atualizarCampo(`${tipo}Contorno`);
+    }
+    
+    function toggleSombra() {
+      const check = document.getElementById("sombraTransparente");
+      const grupoSombra = document.getElementById("grupoSombra");
+      const corSombra = document.getElementById("corSombra");
+      const hexSombra = document.getElementById("hexSombra");
+    
+      if (check.checked) {
+        sombraAnterior = corSombra.value;
+        grupoSombra.style.display = "none";
+        hexSombra.value = "transparent";
+        corSombra.disabled = true;
+        hexSombra.disabled = true;
+      } else {
+        grupoSombra.style.display = "block";
+        corSombra.disabled = false;
+        hexSombra.disabled = false;
+        if (hexSombra.value === "transparent") {
+          corSombra.value = sombraAnterior;
+          hexSombra.value = sombraAnterior;
+        }
+      }
+      desenharFrame(0, tempoTotal);
+    }
+    
+    ["Circulo", "Borda", "Texto", "Fundo", "Sombra", "TextoContorno"].forEach((tipo) => {
+      document.getElementById(`cor${tipo}`).addEventListener("input", (e) => {
+        document.getElementById(`hex${tipo}`).value = e.target.value;
+        desenharFrame(0, tempoTotal);
+      });
+      document.getElementById(`hex${tipo}`).addEventListener("input", (e) => {
+        document.getElementById(`cor${tipo}`).value = e.target.value;
+        desenharFrame(0, tempoTotal);
+      });
+    });
+    
+    document.getElementById("tamanhoTexto").addEventListener("input", (e) => {
+      document.getElementById("displayTamanhoTexto").textContent = e.target.value;
+      desenharFrame(0, tempoTotal);
+    });
+    document.getElementById("grossuraBordaContorno").addEventListener("input", (e) => {
+      document.getElementById("displayGrossuraBordaContorno").textContent = e.target.value;
+      desenharFrame(0, tempoTotal);
+    });
+    document.getElementById("grossuraCirculoContorno").addEventListener("input", (e) => {
+      document.getElementById("displayGrossuraCirculoContorno").textContent = e.target.value;
+      desenharFrame(0, tempoTotal);
+    });
+    document.getElementById("grossuraTextoContorno").addEventListener("input", (e) => {
+      document.getElementById("displayGrossuraTextoContorno").textContent = e.target.value;
+      desenharFrame(0, tempoTotal);
+    });
+    document.getElementById("grossuraFundoContorno").addEventListener("input", (e) => {
+      document.getElementById("displayGrossuraFundoContorno").textContent = e.target.value;
+      desenharFrame(0, tempoTotal);
+    });
+    document.getElementById("grossuraCirculo").addEventListener("input", (e) => {
+      document.getElementById("displayGrossuraCirculo").textContent = e.target.value;
+      desenharFrame(0, tempoTotal);
+    });
+    document.getElementById("grossuraBorda").addEventListener("input", (e) => {
+      document.getElementById("displayGrossuraBorda").textContent = e.target.value;
+      desenharFrame(0, tempoTotal);
+    });
+    
+    document.getElementById("sombra").addEventListener("input", () => desenharFrame(0, tempoTotal));
+    document.getElementById("sombraX").addEventListener("input", () => desenharFrame(0, tempoTotal));
+    document.getElementById("sombraY").addEventListener("input", () => desenharFrame(0, tempoTotal));
+    document.getElementById("tipoTraco").addEventListener("change", () => desenharFrame(0, tempoTotal));
+    
+    document.getElementById("initialTime").addEventListener("input", () => {
+      tempoTotal = parseInt(document.getElementById("initialTime").value) || 0;
+      desenharFrame(0, tempoTotal);
+    });
+    
     function desenharFrame(progresso, tempoRestante) {
-      const centro = 100, raio = 70;
+      const centro = 150, raio = 100;
       const anguloInicio = -Math.PI / 2;
       const anguloFim = anguloInicio + progresso * 2 * Math.PI;
-      ctx.clearRect(0, 0, 200, 200);
-      ctx.beginPath(); ctx.arc(centro, centro, raio, 0, 2 * Math.PI);
-      ctx.strokeStyle = "#333"; ctx.lineWidth = 8; ctx.stroke();
-      ctx.beginPath(); ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
-      ctx.strokeStyle = "#00e676"; ctx.lineWidth = 8; ctx.stroke();
-      ctx.fillStyle = "#fff"; ctx.font = "bold 36px Arial";
-      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    
+      const corFundo = hex("Fundo");
+      const corBorda = hex("Borda");
+      const corCirculo = hex("Circulo");
+      const corTexto = hex("Texto");
+      const corSombra = hex("Sombra");
+      const tipoTraco = document.getElementById("tipoTraco").value;
+      const sombra = parseInt(document.getElementById("sombra").value);
+      const offsetX = parseInt(document.getElementById("sombraX").value);
+      const offsetY = parseInt(document.getElementById("sombraY").value);
+      const tamanhoTexto = parseInt(document.getElementById("tamanhoTexto").value);
+      const grossuraCirculo = parseInt(document.getElementById("grossuraCirculo").value);
+      const grossuraBorda = parseInt(document.getElementById("grossuraBorda").value);
+    
+      ctx.clearRect(0, 0, 300, 300);
+    
+      if (corFundo !== "transparent") {
+        ctx.fillStyle = corFundo;
+        ctx.fillRect(0, 0, 300, 300);
+      }
+    
+      if (document.getElementById("fundoContornoAtivo") && document.getElementById("fundoContornoAtivo").checked) {
+        const cor = document.getElementById("hexFundoContorno").value;
+        const grossura = parseInt(document.getElementById("grossuraFundoContorno").value);
+        const tipo = document.getElementById("tipoFundoContorno").value;
+        ctx.beginPath();
+        ctx.setLineDash(tipo === "dashed" ? [10, 10] : tipo === "dotted" ? [2, 6] : []);
+        ctx.strokeStyle = cor;
+        ctx.lineWidth = grossura;
+        ctx.strokeRect(0, 0, 300, 300);
+      }
+    
+      if (corBorda !== "transparent") {
+        ctx.beginPath();
+        ctx.setLineDash([]);
+        ctx.arc(centro, centro, raio, 0, 2 * Math.PI);
+        ctx.strokeStyle = corBorda;
+        ctx.lineWidth = grossuraBorda;
+        ctx.shadowBlur = sombra;
+        ctx.shadowOffsetX = offsetX;
+        ctx.shadowOffsetY = offsetY;
+        ctx.shadowColor = corSombra;
+        ctx.stroke();
+      }
+    
+      if (document.getElementById("bordaContornoAtivo") && document.getElementById("bordaContornoAtivo").checked) {
+        const cor = document.getElementById("hexBordaContorno").value;
+        const grossura = parseInt(document.getElementById("grossuraBordaContorno").value);
+        const tipo = document.getElementById("tipoBordaContorno").value;
+        ctx.beginPath();
+        ctx.setLineDash(tipo === "dashed" ? [10, 10] : tipo === "dotted" ? [2, 6] : []);
+        ctx.arc(centro, centro, raio, 0, 2 * Math.PI);
+        ctx.strokeStyle = cor;
+        ctx.lineWidth = grossura;
+        ctx.stroke();
+      }
+    
+      if (corCirculo !== "transparent") {
+        ctx.beginPath();
+        ctx.setLineDash(tipoTraco === "dashed" ? [10, 10] : tipoTraco === "dotted" ? [2, 6] : []);
+        ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
+        ctx.strokeStyle = corCirculo;
+        ctx.lineWidth = grossuraCirculo;
+        ctx.shadowBlur = sombra;
+        ctx.shadowOffsetX = offsetX;
+        ctx.shadowOffsetY = offsetY;
+        ctx.shadowColor = corSombra;
+        ctx.stroke();
+      }
+    
+      if (document.getElementById("circuloContornoAtivo") && document.getElementById("circuloContornoAtivo").checked) {
+        const cor = document.getElementById("hexCirculoContorno").value;
+        const grossura = parseInt(document.getElementById("grossuraCirculoContorno").value);
+        const tipo = document.getElementById("tipoCirculoContorno").value;
+        ctx.beginPath();
+        ctx.setLineDash(tipo === "dashed" ? [10, 10] : tipo === "dotted" ? [2, 6] : []);
+        ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
+        ctx.strokeStyle = cor;
+        ctx.lineWidth = grossura;
+        ctx.stroke();
+      }
+    
+      ctx.fillStyle = corTexto;
+      ctx.shadowBlur = sombra;
+      ctx.shadowOffsetX = offsetX;
+      ctx.shadowOffsetY = offsetY;
+      ctx.shadowColor = corSombra;
+      ctx.font = `bold ${tamanhoTexto}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
       ctx.fillText(tempoRestante.toString(), centro, centro);
+    
+      if (document.getElementById("textoContornoAtivo") && document.getElementById("textoContornoAtivo").checked) {
+        const cor = document.getElementById("hexTextoContorno").value;
+        const grossura = parseInt(document.getElementById("grossuraTextoContorno").value);
+        const tipo = document.getElementById("tipoTextoContorno").value;
+        ctx.beginPath();
+        ctx.setLineDash(tipo === "dashed" ? [10, 10] : tipo === "dotted" ? [2, 6] : []);
+        ctx.strokeStyle = cor;
+        ctx.lineWidth = grossura;
+        ctx.strokeText(tempoRestante.toString(), centro, centro);
+      }
     }
-
+    
     function iniciarContagem() {
-      frames = []; preview.style.display = "none"; downloadBtn.style.display = "none";
-      status.textContent = "Iniciando contagem...";
+      desabilitarControles();
+      frames = [];
       let tempoRestante = tempoTotal;
-
+      status.textContent = "Contando...";
+      gifDownload.innerHTML = "<p>Contando...</p>";
       const intervalo = setInterval(() => {
         const progresso = (tempoTotal - tempoRestante) / tempoTotal;
         desenharFrame(progresso, tempoRestante);
@@ -55,39 +686,127 @@
         tempoRestante--;
         if (tempoRestante < 0) {
           clearInterval(intervalo);
-          status.textContent = "Enviando frames para o servidor...";
+          status.textContent = "Enviando para o servidor...";
+          gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
           enviarParaServidor(frames);
         }
       }, 1000);
     }
-
+    
     function enviarParaServidor(frames) {
-      fetch('/api/gerar-gif', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ frames })
+      fetch("/api/gerar-gif", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ frames }),
       })
-      .then(res => {
-        if (!res.ok) throw new Error('Erro no servidor');
-        return res.json();
-      })
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         if (data.url) {
-          const gifURL = data.url;
-          preview.src = gifURL;
-          preview.style.display = "block";
-          downloadBtn.href = gifURL;
-          downloadBtn.style.display = "inline-block";
-          status.textContent = "GIF pronto!";
+          status.textContent = "GIF gerado com sucesso!";
+          gifDownload.innerHTML = `GIF pronto: <a href="${data.url}" target="_blank">Baixar</a>`;
         } else {
-          status.textContent = "Resposta inesperada do servidor.";
+          status.textContent = "Erro ao gerar GIF.";
+          gifDownload.innerHTML = "<p>Erro ao gerar GIF.</p>";
         }
+        habilitarControles();
       })
-      .catch(err => {
-        console.error(err);
-        status.textContent = "Erro ao gerar GIF no servidor.";
+      .catch(() => {
+        status.textContent = "Erro na comunicação com o servidor.";
+        gifDownload.innerHTML = "<p>Erro na comunicação com o servidor.</p>";
+        habilitarControles();
       });
     }
+    
+    document.addEventListener("DOMContentLoaded", () => {
+      tempoTotal = parseInt(document.getElementById("initialTime").value) || 30;
+      toggleContorno("circulo");
+      toggleContorno("borda");
+      toggleContorno("texto");
+      toggleContorno("fundo");
+      toggleSombra();
+      desenharFrame(0, tempoTotal);
+    });
+	
+	function resetarPadroes() {
+  // Valor Inicial do Timer
+  document.getElementById("initialTime").value = 30;
+  tempoTotal = 30;
+  
+  // Configuração do Círculo
+  document.getElementById("circuloTransparente").checked = false;
+  document.getElementById("corCirculo").value = "#4A90E2";
+  document.getElementById("hexCirculo").value = "#4A90E2";
+  document.getElementById("grossuraCirculo").value = 28;
+  document.getElementById("displayGrossuraCirculo").textContent = 28;
+  document.getElementById("circuloContornoAtivo").checked = false;
+  document.getElementById("grupoCirculoContorno").style.display = "none";
+  document.getElementById("corCirculoContorno").value = "#000000";
+  document.getElementById("hexCirculoContorno").value = "#000000";
+  document.getElementById("grossuraCirculoContorno").value = 2;
+  document.getElementById("displayGrossuraCirculoContorno").textContent = 2;
+  document.getElementById("tipoCirculoContorno").value = "solid";
+  
+  // Configuração da Borda
+  document.getElementById("bordaTransparente").checked = false;
+  document.getElementById("corBorda").value = "#2D3E50";
+  document.getElementById("hexBorda").value = "#2D3E50";
+  document.getElementById("grossuraBorda").value = 5;
+  document.getElementById("displayGrossuraBorda").textContent = 5;
+  document.getElementById("bordaContornoAtivo").checked = false;
+  document.getElementById("grupoBordaContorno").style.display = "none";
+  document.getElementById("corBordaContorno").value = "#000000";
+  document.getElementById("hexBordaContorno").value = "#000000";
+  document.getElementById("grossuraBordaContorno").value = 2;
+  document.getElementById("displayGrossuraBordaContorno").textContent = 2;
+  document.getElementById("tipoBordaContorno").value = "solid";
+  
+  // Configuração do Texto
+  document.getElementById("corTexto").value = "#ffffff";
+  document.getElementById("hexTexto").value = "#ffffff";
+  document.getElementById("tamanhoTexto").value = 90;
+  document.getElementById("displayTamanhoTexto").textContent = 90;
+  document.getElementById("textoContornoAtivo").checked = false;
+  document.getElementById("grupoTextoContorno").style.display = "none";
+  document.getElementById("corTextoContorno").value = "#000000";
+  document.getElementById("hexTextoContorno").value = "#000000";
+  document.getElementById("grossuraTextoContorno").value = 2;
+  document.getElementById("displayGrossuraTextoContorno").textContent = 2;
+  document.getElementById("tipoTextoContorno").value = "solid";
+  
+  // Configuração do Fundo
+  document.getElementById("fundoTransparente").checked = true;
+  document.getElementById("corFundo").value = "#000000";
+  document.getElementById("hexFundo").value = "transparent";
+  document.getElementById("corFundo").disabled = true;
+  document.getElementById("hexFundo").disabled = true;
+  document.getElementById("fundoContornoAtivo").checked = false;
+  document.getElementById("grupoFundoContorno").style.display = "none";
+  document.getElementById("corFundoContorno").value = "#000000";
+  document.getElementById("hexFundoContorno").value = "#000000";
+  document.getElementById("grossuraFundoContorno").value = 2;
+  document.getElementById("displayGrossuraFundoContorno").textContent = 2;
+  document.getElementById("tipoFundoContorno").value = "solid";
+  
+  // Configuração da Sombra
+  document.getElementById("sombraTransparente").checked = false;
+  document.getElementById("corSombra").value = "#000000";
+  document.getElementById("hexSombra").value = "#000000";
+  document.getElementById("corSombra").disabled = false;
+  document.getElementById("hexSombra").disabled = false;
+  document.getElementById("grupoSombra").style.display = "block";
+  document.getElementById("sombra").value = 8;
+  document.getElementById("sombraX").value = 4;
+  document.getElementById("sombraY").value = 4;
+  sombraAnterior = "#000000";
+  
+  // Traçado do Círculo
+  document.getElementById("tipoTraco").value = "solid";
+  
+  // Atualiza a pré-visualização com os valores resetados
+  desenharFrame(0, tempoTotal);
+}
+
+	
   </script>
 </body>
 </html>
