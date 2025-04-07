@@ -1,11 +1,11 @@
-const express = require('express');
+// server.js
+const express   = require('express');
 const bodyParser = require('body-parser');
-const fs = require('fs');
+const fs        = require('fs');
 const GIFEncoder = require('gifencoder');
 const { createCanvas, loadImage } = require('canvas');
 
-// Definindo o app do express
-const app = express();
+const app  = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.json({ limit: '50mb' }));
@@ -21,14 +21,14 @@ app.post('/api/gerar-gif', async (req, res) => {
     const startTime = Date.now();
 
     /* --- pega a resolução real dos frames --- */
-    const img0 = await loadImage(frames[0]);
-    const width = img0.width;   // ex.: 1500
+    const img0   = await loadImage(frames[0]);
+    const width  = img0.width;   // ex.: 1500
     const height = img0.height;  // ex.: 1500
 
     /* --- configura encoder no mesmo tamanho --- */
-    const encoder = new GIFEncoder(width, height);
-    const fileName = `cronometro-${Date.now()}.gif`;
-    const filePath = `public/gif/${fileName}`;
+    const encoder   = new GIFEncoder(width, height);
+    const fileName  = `cronometro-${Date.now()}.gif`;
+    const filePath  = `public/gif/${fileName}`;
     const outStream = fs.createWriteStream(filePath);
 
     encoder.createReadStream().pipe(outStream);
@@ -39,17 +39,16 @@ app.post('/api/gerar-gif', async (req, res) => {
 
     /* --- canvas buffer --- */
     const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
+    const ctx    = canvas.getContext('2d');
 
     /* primeiro frame já carregado */
-    ctx.clearRect(0, 0, width, height); // Garantir que o fundo esteja limpo e transparente
     ctx.drawImage(img0, 0, 0, width, height);
     encoder.addFrame(ctx);
 
     /* demais frames */
     for (let i = 1; i < frames.length; i++) {
       const img = await loadImage(frames[i]);
-      ctx.clearRect(0, 0, width, height);  // Limpa o canvas, mantendo a transparência
+      ctx.clearRect(0, 0, width, height);
       ctx.drawImage(img, 0, 0, width, height);
       encoder.addFrame(ctx);
     }
@@ -69,6 +68,6 @@ app.post('/api/gerar-gif', async (req, res) => {
 });
 /* =================================== */
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
-});
+app.listen(PORT, () =>
+  console.log(`Servidor rodando em http://localhost:${PORT}`)
+);
