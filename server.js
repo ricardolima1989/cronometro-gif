@@ -63,7 +63,7 @@ app.post('/api/gerar-gif', async (req, res) => {
     // Quando a escrita do arquivo terminar, calcula o tempo gasto e envia a resposta
     outStream.on('finish', () => {
       const elapsed = Date.now() - startTime; // tempo gasto em milissegundos
-      res.json({ url: /gif/${fileName}, estimatedTime: elapsed });
+      res.json({ url: `/gif/${fileName}`, estimatedTime: elapsed });
     });
 
   } catch (err) {
