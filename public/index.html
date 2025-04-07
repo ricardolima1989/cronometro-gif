@@ -432,10 +432,7 @@
     </div>
   </div>
   
-
-
-
-<script>
+  <script>
   /* ====== SETUP DO CANVAS COM ALTA DENSIDADE ====== */
   const LOGICAL_SIZE = 300;                   // Tamanho "visível"
   const scale = window.devicePixelRatio || 25; // Se não tiver devicePixelRatio, assume 25
@@ -456,7 +453,6 @@
   let frames = [];
   let tempoTotal = parseInt(document.getElementById("initialTime").value) || 30;
   let sombraAnterior = "#000000";
-  let lastSecond = 0;  // Para garantir que um novo frame seja salvo a cada segundo
 
   /* ==================== UTILIDADES ==================== */
   const hex = id => document.getElementById(`hex${id}`).value || "transparent";
@@ -467,7 +463,6 @@
     document.querySelectorAll(".container input, .container select, .container button")
             .forEach(el => el.disabled = true);
   }
-
   function habilitarControles() {
     document.querySelectorAll(".container input, .container select, .container button")
             .forEach(el => el.disabled = false);
@@ -709,10 +704,9 @@
       desenharFrame(progresso, Math.floor(tempoRestante));
       
       // Se passaram pelo menos 100ms desde o último frame salvo (4 FPS), salva um novo frame
-      if (Math.floor(elapsed) > lastSecond) {
+      if (timestamp - lastFrameTime >= 1000 / 30) {
         frames.push(canvas.toDataURL("image/png"));
         lastFrameTime = timestamp;
-        lastSecond = Math.floor(elapsed);
       }
 
       // Atualiza na tela o tempo restante para finalizar
@@ -742,6 +736,7 @@
       .then(data => {
         if (data.url) {
           status.textContent = "GIF gerado com sucesso!";
+          // Exibe a mensagem com o tempo estimado que o servidor levou para gerar o GIF
           gifDownload.innerHTML = `GIF pronto em ${Math.floor(data.estimatedTime / 1000)} segundos: <a href="${data.url}" target="_blank">Baixar</a>`;
         } else {
           status.textContent = "Erro ao gerar GIF.";
@@ -843,14 +838,7 @@
     toggleSombra();
     desenharFrame(0, tempoTotal);
   });
-</script>
-
-
-
-
-
-
-
+  </script>
 
 </body>
 </html>
