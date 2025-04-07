@@ -683,26 +683,47 @@
   }
 
   /* ================== CONTAGEM ================== */
-  function iniciarContagem() {
-    desabilitarControles();
-    frames = [];
-    let tempoRestante = tempoTotal;
-    status.textContent = "Contando...";
-    gifDownload.innerHTML = "<p>Contando...</p>";
 
-    const intervalo = setInterval(() => {
-      const progresso = (tempoTotal - tempoRestante) / tempoTotal;
-      desenharFrame(progresso, tempoRestante);
+
+function iniciarContagem() {
+  desabilitarControles();
+  frames = [];
+  status.textContent   = "Contando...";
+  gifDownload.innerHTML = "<p>Contando...</p>";
+
+  const totalMs   = tempoTotal * 1000;       // duração total em ms
+  const start     = performance.now();
+  let  ultimoGIF  = start;                   // último frame capturado
+  const CAPTURA_MS = 100;                    // 10 fps no GIF
+
+  function tick(now) {
+    const decorrido = now - start;
+    const progresso = Math.min(decorrido / totalMs, 1);   // 0 → 1
+    const faltaSeg  = Math.ceil((totalMs - decorrido) / 1000);
+
+    desenharFrame(progresso, faltaSeg);
+
+    // grava frame para o GIF a cada 100 ms
+    if (now - ultimoGIF >= CAPTURA_MS) {
       frames.push(canvas.toDataURL("image/png"));
-      tempoRestante--;
-      if (tempoRestante < 0) {
-        clearInterval(intervalo);
-        status.textContent = "Enviando para o servidor...";
-        gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
-        enviarParaServidor(frames);
-      }
-    }, 1000);
+      ultimoGIF = now;
+    }
+
+    if (progresso < 1) {
+      requestAnimationFrame(tick);          // continua animando
+    } else {
+      status.textContent   = "Enviando para o servidor...";
+      gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
+      enviarParaServidor(frames);
+    }
   }
+  requestAnimationFrame(tick);
+}
+
+
+
+
+
 
   /* =============== ENVIO AO SERVIDOR =============== */
   function enviarParaServidor(frames) {
