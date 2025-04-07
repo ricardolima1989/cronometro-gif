@@ -432,7 +432,8 @@
     </div>
   </div>
   
-  <script>
+ 
+<script>
   /* ====== SETUP DO CANVAS COM ALTA DENSIDADE ====== */
   const LOGICAL_SIZE = 300;                   // Tamanho "visível"
   const scale = window.devicePixelRatio || 25; // Se não tiver devicePixelRatio, assume 25
@@ -463,6 +464,7 @@
     document.querySelectorAll(".container input, .container select, .container button")
             .forEach(el => el.disabled = true);
   }
+
   function habilitarControles() {
     document.querySelectorAll(".container input, .container select, .container button")
             .forEach(el => el.disabled = false);
@@ -583,24 +585,13 @@
     const grossuraBorda   = +document.getElementById("grossuraBorda").value;
 
 	// Limpa o canvas antes de desenhar (garante fundo transparente)
-	console.log('Limpando canvas...');
 	ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
 
 	// Verificando a cor do fundo e se a opção de fundo transparente está ativada
-	console.log('Cor do fundo:', corFundo);
-	console.log('Fundo transparente ativado:', document.getElementById("fundoTransparente").checked);
-
-	// Limpa o canvas para garantir fundo transparente
-	console.log('Limpando canvas...');
-	ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);  // Limpa o canvas
-
-if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").checked) {
-    ctx.fillStyle = corFundo;
-    ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
-}
-
-
-
+	if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").checked) {
+		ctx.fillStyle = corFundo;
+		ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
+	}
 
     // Contorno do fundo
     if (document.getElementById("fundoContornoAtivo")?.checked) {
@@ -693,43 +684,32 @@ if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").
   }
 
   /* ================== CONTAGEM ================== */
-  // Essa versão usa requestAnimationFrame para atualizar o canvas suavemente
-  // e só salva um frame a cada 250ms (4 FPS)
   function iniciarContagem() {
     desabilitarControles();
     frames = [];
-    const tempoTotalSegundos = tempoTotal; // tempoTotal definido no início (em segundos)
+    const tempoTotalSegundos = tempoTotal;
     status.textContent = "Contando...";
     gifDownload.innerHTML = "<p>Contando...</p>";
 
-    let startTime = null;      // Hora de início da contagem
-    let lastFrameTime = 0;     // Último momento que salvamos um frame
+    let startTime = null;
+    let lastFrameTime = 0;
 
     function animationLoop(timestamp) {
-      if (!startTime) startTime = timestamp;           // Define o início no primeiro frame
-      const elapsed = (timestamp - startTime) / 1000;    // Tempo decorrido em segundos
-      let tempoRestante = tempoTotalSegundos - elapsed;  // Calcula o tempo restante
-      if (tempoRestante < 0) tempoRestante = 0;            // Evita valores negativos
-      const progresso = elapsed / tempoTotalSegundos;    // Progresso da contagem (0 a 1)
+      if (!startTime) startTime = timestamp;
+      const elapsed = (timestamp - startTime) / 1000;
+      let tempoRestante = tempoTotalSegundos - elapsed;
+      if (tempoRestante < 0) tempoRestante = 0;
+      const progresso = elapsed / tempoTotalSegundos;
 
-      // Atualiza o canvas conforme o tempo decorrido
       desenharFrame(progresso, Math.floor(tempoRestante));
-      
- // Se passaram pelo menos 250ms desde o último frame salvo (4 FPS), salva um novo frame
-if (timestamp - lastFrameTime >= 50) {
-  // Chama a função limparFundo para garantir que o fundo seja transparente
-  const frameDataURL = canvas.toDataURL("image/png");
-  const frameLimpo = limparFundo(frameDataURL);  // limpa o fundo se necessário
-  
-  // Adiciona o frame limpo (sem fundo) na lista de frames
-  frames.push(frameLimpo);
-  lastFrameTime = timestamp;
-}
 
-      // Atualiza na tela o tempo restante para finalizar
+      if (timestamp - lastFrameTime >= 50) {
+        frames.push(canvas.toDataURL("image/png"));
+        lastFrameTime = timestamp;
+      }
+
       gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
 
-      // Continua a animação se ainda houver tempo
       if (elapsed < tempoTotalSegundos) {
         requestAnimationFrame(animationLoop);
       } else {
@@ -753,7 +733,6 @@ if (timestamp - lastFrameTime >= 50) {
       .then(data => {
         if (data.url) {
           status.textContent = "GIF gerado com sucesso!";
-          // Exibe a mensagem com o tempo estimado que o servidor levou para gerar o GIF
           gifDownload.innerHTML = `GIF pronto em ${Math.floor(data.estimatedTime / 1000)} segundos: <a href="${data.url}" target="_blank">Baixar</a>`;
         } else {
           status.textContent = "Erro ao gerar GIF.";
@@ -848,6 +827,7 @@ if (timestamp - lastFrameTime >= 50) {
     desenharFrame(0, tempoTotal);
   }
 
+
   /* ============== INICIALIZAÇÃO ============== */
   document.addEventListener("DOMContentLoaded", () => {
     tempoTotal = +document.getElementById("initialTime").value || 30;
@@ -855,7 +835,8 @@ if (timestamp - lastFrameTime >= 50) {
     toggleSombra();
     desenharFrame(0, tempoTotal);
   });
-  </script>
+</script>
+
 
 </body>
 </html>
