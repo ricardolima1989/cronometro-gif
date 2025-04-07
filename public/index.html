@@ -843,25 +843,50 @@ function iniciarContagem() {
 }
 
 // Função para enviar para o servidor e liberar o link de download
+// Função para enviar para o servidor e gerar o GIF
 function enviarParaServidor(frames) {
-  // Simulando o retorno do servidor com um tempo de delay
-  setTimeout(() => {
-    // O servidor retornou com sucesso
+  // Passo 1: Enviar os frames para o servidor
+  fetch('/api/gerar-gif', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ frames })
+  })
+  .then(response => response.json())
+  .then(data => {
+    // A resposta contém a URL do GIF gerado
+    const gifUrl = data.url;
 
-    // Exibe a mensagem de sucesso e o link de download
-    gifDownload.innerHTML = `
-      <p>GIF gerado com sucesso!</p>
-      <a href="caminho/para/seu/gif.gif" download="cronometro.gif" class="btn-download">Baixar GIF</a>
-    `;
-    
-    // Desabilitar a barra de progresso, já que o download está pronto
-    document.getElementById("progressWrapper").style.display = "none";
-    
-    // Liberar o botão para o usuário poder baixar
-    const downloadButton = document.querySelector(".btn-download");
-    downloadButton.style.display = "inline-block";
-  }, 2000); // Simula o delay de 2 segundos no retorno do servidor
+    // Passo 2: Exibir a barra de progresso enquanto o GIF é gerado
+    const progressBar = document.getElementById("progressBarInner");
+    const progressText = document.getElementById("progressPercent");
+
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 2; // Incrementa 2% a cada 100ms
+      progressBar.style.width = `${progress}%`;
+      progressText.textContent = `${progress}%`;
+
+      // Finaliza a animação quando atinge 100%
+      if (progress >= 100) {
+        clearInterval(interval);
+
+        // Exibe o link para download
+        gifDownload.innerHTML = `
+          <p>GIF gerado com sucesso!</p>
+          <a href="${gifUrl}" download="cronometro.gif" class="btn-download">Baixar GIF</a>
+        `;
+      }
+    }, 100); // A cada 100ms (5 segundos)
+
+  })
+  .catch(error => {
+    console.error('Erro ao enviar os frames para o servidor:', error);
+    alert('Erro ao gerar o GIF. Tente novamente.');
+  });
 }
+
 
   
   
