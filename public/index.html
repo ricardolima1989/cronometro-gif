@@ -703,8 +703,8 @@
       // Atualiza o canvas conforme o tempo decorrido
       desenharFrame(progresso, Math.floor(tempoRestante));
       
-      // Se passaram pelo menos 100ms desde o último frame salvo (4 FPS), salva um novo frame
-      if (timestamp - lastFrameTime >= 1000 / 30) {
+      // Se passaram pelo menos 250ms desde o último frame salvo (4 FPS), salva um novo frame
+      if (timestamp - lastFrameTime >= 50) {
         frames.push(canvas.toDataURL("image/png"));
         lastFrameTime = timestamp;
       }
