@@ -429,6 +429,10 @@
         <div id="gifDownload">
           <p>Aguardando...</p>
         </div>
+		<div id="progressBarContainer" style="width: 100%; background-color: #ddd; height: 20px; border-radius: 5px; margin-top: 10px; display: none;">
+		<div id="progressBar" style="width: 0%; height: 100%; background-color: #28a745; border-radius: 5px;"></div>
+		</div>
+		
       </div>
     </div>
   
@@ -721,10 +725,43 @@ function iniciarContagem() {
     if (elapsed < tempoTotalSegundos) {
       requestAnimationFrame(animationLoop);
     } else {
-      status.textContent = "Enviando para o servidor...";
-      gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
-      enviarParaServidor(frames);
+  status.textContent = "Enviando para o servidor...";
+  gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
+  
+  // Exibindo a barra de progresso
+  const progressBar = document.getElementById("progressBar");
+  const progressBarContainer = document.getElementById("progressBarContainer");
+  progressBarContainer.style.display = "block";  // Mostra a barra de progresso
+
+  let progress = 0;
+  
+  // Função para simular a progressão da barra
+  function updateProgressBar() {
+    if (progress < 50) {
+      progress += 2.5;  // Incremento até 50%
+      progressBar.style.width = progress + '%';
+    } else if (progress < 75) {
+      progress += 5;  // Incremento até 75%
+      progressBar.style.width = progress + '%';
+    } else if (progress < 100) {
+      progress += 25;  // Finalizando até 100%
+      progressBar.style.width = progress + '%';
+    } else {
+      clearInterval(progressInterval);  // Barra alcançou 100%, para a animação
+      progressBar.style.opacity = 0;  // Esmaecer a barra após 100%
+      setTimeout(() => {
+        progressBarContainer.style.display = "none";  // Esconde a barra depois de esmaecer
+      }, 1000);  // A barra esmaecerá por 1 segundo antes de desaparecer
     }
+  }
+
+  // Intervalo para incrementar a barra de progresso
+  let progressInterval = setInterval(updateProgressBar, 1000);  // Atualiza a cada 1 segundo
+
+  // Envio dos frames para o servidor após a finalização da barra
+  enviarParaServidor(frames);
+}
+
   }
 
   requestAnimationFrame(animationLoop);
