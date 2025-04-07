@@ -594,14 +594,11 @@
 	console.log('Limpando canvas...');
 	ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);  // Limpa o canvas
 
-	// Só desenha o fundo se a cor não for transparente e se o fundo não for transparente
-	if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").checked) {
-		console.log('Desenhando fundo com a cor:', corFundo);
-		ctx.fillStyle = corFundo;
-		ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
-	} else {
-		console.log('Fundo não será desenhado (fundo transparente ou fundo desativado).');
-	}
+if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").checked) {
+    ctx.fillStyle = corFundo;
+    ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
+}
+
 
 
 
@@ -718,11 +715,16 @@
       // Atualiza o canvas conforme o tempo decorrido
       desenharFrame(progresso, Math.floor(tempoRestante));
       
-      // Se passaram pelo menos 250ms desde o último frame salvo (4 FPS), salva um novo frame
-      if (timestamp - lastFrameTime >= 50) {
-        frames.push(canvas.toDataURL("image/png"));
-        lastFrameTime = timestamp;
-      }
+ // Se passaram pelo menos 250ms desde o último frame salvo (4 FPS), salva um novo frame
+if (timestamp - lastFrameTime >= 50) {
+  // Chama a função limparFundo para garantir que o fundo seja transparente
+  const frameDataURL = canvas.toDataURL("image/png");
+  const frameLimpo = limparFundo(frameDataURL);  // limpa o fundo se necessário
+  
+  // Adiciona o frame limpo (sem fundo) na lista de frames
+  frames.push(frameLimpo);
+  lastFrameTime = timestamp;
+}
 
       // Atualiza na tela o tempo restante para finalizar
       gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
