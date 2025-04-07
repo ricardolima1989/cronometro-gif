@@ -27,8 +27,8 @@ app.post('/api/gerar-gif', async (req, res) => {
 
     /* --- configura encoder no mesmo tamanho --- */
     const encoder   = new GIFEncoder(width, height);
-    const fileName  = `cronometro-${Date.now()}.gif`;
-    const filePath  = `public/gif/${fileName}`;
+    const fileName  = cronometro-${Date.now()}.gif;
+    const filePath  = public/gif/${fileName};
     const outStream = fs.createWriteStream(filePath);
 
     encoder.createReadStream().pipe(outStream);
@@ -36,10 +36,15 @@ app.post('/api/gerar-gif', async (req, res) => {
     encoder.setRepeat(-1);            // loop infinito
     encoder.setDelay(1000 / 20);      // 250ms por frame (4 FPS)
     encoder.setQuality(100);           // 1‑30 (1 = melhor)
+	encoder.setTransparent(0x00FF00);
 
     /* --- canvas buffer --- */
     const canvas = createCanvas(width, height);
     const ctx    = canvas.getContext('2d');
+
+	// Pinta o fundo com a cor que será usada como "transparente"
+	ctx.fillStyle = '#00FF00';
+	ctx.fillRect(0, 0, width, height);
 
     /* primeiro frame já carregado */
     ctx.drawImage(img0, 0, 0, width, height);
@@ -58,7 +63,7 @@ app.post('/api/gerar-gif', async (req, res) => {
     // Quando a escrita do arquivo terminar, calcula o tempo gasto e envia a resposta
     outStream.on('finish', () => {
       const elapsed = Date.now() - startTime; // tempo gasto em milissegundos
-      res.json({ url: `/gif/${fileName}`, estimatedTime: elapsed });
+      res.json({ url: /gif/${fileName}, estimatedTime: elapsed });
     });
 
   } catch (err) {
@@ -69,5 +74,5 @@ app.post('/api/gerar-gif', async (req, res) => {
 /* =================================== */
 
 app.listen(PORT, () =>
-  console.log(`Servidor rodando em http://localhost:${PORT}`)
+  console.log(Servidor rodando em http://localhost:${PORT})
 );
