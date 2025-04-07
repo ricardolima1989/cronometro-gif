@@ -683,26 +683,48 @@
   }
 
   /* ================== CONTAGEM ================== */
-  function iniciarContagem() {
-    desabilitarControles();
-    frames = [];
-    let tempoRestante = tempoTotal;
-    status.textContent = "Contando...";
-    gifDownload.innerHTML = "<p>Contando...</p>";
 
-    const intervalo = setInterval(() => {
-      const progresso = (tempoTotal - tempoRestante) / tempoTotal;
-      desenharFrame(progresso, tempoRestante);
-      frames.push(canvas.toDataURL("image/png"));
-      tempoRestante--;
-      if (tempoRestante < 0) {
-        clearInterval(intervalo);
-        status.textContent = "Enviando para o servidor...";
-        gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
-        enviarParaServidor(frames);
-      }
-    }, 1000);
+
+function iniciarContagem() {
+  desabilitarControles();
+  frames = [];
+  let tempoTotal = parseInt(document.getElementById("initialTime").value) || 30;
+  let startTime = null;
+
+  function animationLoop(timestamp) {
+    if (!startTime) startTime = timestamp;
+    let elapsed = (timestamp - startTime) / 1000; // tempo decorrido em segundos
+    let tempoRestante = tempoTotal - elapsed;
+    // Garante que o tempo restante não seja negativo
+    if (tempoRestante < 0) tempoRestante = 0;
+
+    // Progresso é a fração do tempo total decorrido
+    let progresso = elapsed / tempoTotal;
+
+    // Atualiza o canvas com base no progresso e tempo restante (arredondado)
+    desenharFrame(progresso, Math.floor(tempoRestante));
+
+    // Captura o frame atual
+    frames.push(canvas.toDataURL("image/png"));
+
+    // Continua a animação se ainda houver tempo restante
+    if (elapsed < tempoTotal) {
+      requestAnimationFrame(animationLoop);
+    } else {
+      // Envia os frames para o servidor quando o tempo acabar
+      status.textContent = "Enviando para o servidor...";
+      gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
+      enviarParaServidor(frames);
+    }
   }
+
+  // Inicia o loop de animação
+  requestAnimationFrame(animationLoop);
+}
+
+
+
+
 
   /* =============== ENVIO AO SERVIDOR =============== */
   function enviarParaServidor(frames) {
