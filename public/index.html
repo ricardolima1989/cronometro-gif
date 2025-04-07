@@ -156,6 +156,25 @@
     height: auto;
   }
 }
+
+
+#progressBarContainer {
+  width: 100%;
+  background-color: #ddd;
+  height: 20px;
+  border-radius: 5px;
+  margin-top: 10px;
+  display: none; /* ISSO É FUNDAMENTAL */
+}
+
+#progressBar {
+  width: 0%;
+  height: 100%;
+  background-color: #28a745;
+  border-radius: 5px;
+  transition: width 0.1s linear;
+}
+
   </style>
 </head>
 <body>
@@ -429,7 +448,10 @@
         <div id="gifDownload">
           <p>Aguardando...</p>
         </div>
-		<div id="progressBarContainer" style="width: 100%; background-color: #ddd; height: 20px; border-radius: 5px; margin-top: 10px; display: none;">
+		<div id="progressBarContainer">
+  <div id="progressBar"></div>
+</div>
+
 		<div id="progressBar" style="width: 0%; height: 100%; background-color: #28a745; border-radius: 5px;"></div>
 		</div>
 		
@@ -439,8 +461,9 @@
   </div>
   
   
-
-<script>
+  
+  
+  <script>
 /* ====== SETUP DO CANVAS COM ALTA DENSIDADE ====== */
 const LOGICAL_SIZE = 300;                   // Tamanho "visível"
 const scale = window.devicePixelRatio || 2; // Se não tiver devicePixelRatio, assume 25
@@ -577,7 +600,6 @@ function desenharFrame(progresso, tempoRestante) {
   const centro = 150, raio = 100;
   const anguloInicio = -Math.PI / 2;
   const anguloFim = anguloInicio + Math.min(progresso, 1) * 2 * Math.PI;
-
   const corFundo   = hex("Fundo");
   const corBorda   = hex("Borda");
   const corCirculo = hex("Circulo");
@@ -645,7 +667,7 @@ function desenharFrame(progresso, tempoRestante) {
     ctx.setLineDash(tipoTraco === "dashed" ? [10,10] : tipoTraco === "dotted" ? [2,6] : []);
     ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
     ctx.strokeStyle   = corCirculo;
-	ctx.lineCap = "round";
+    ctx.lineCap = "round";  // Isso adiciona o arredondamento nas pontas da barra
 	ctx.lineWidth = grossuraCirculo;
     ctx.shadowBlur    = sombra;
     ctx.shadowOffsetX = offsetX;
@@ -725,53 +747,18 @@ function iniciarContagem() {
     if (elapsed < tempoTotalSegundos) {
       requestAnimationFrame(animationLoop);
     } else {
-  status.textContent = "Enviando para o servidor...";
-  gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
-  
-  // Exibindo a barra de progresso
-  const progressBar = document.getElementById("progressBar");
-  const progressBarContainer = document.getElementById("progressBarContainer");
-  progressBarContainer.style.display = "block";  // Mostra a barra de progresso
-
-
-let progress = 0;
-let totalTime = 8;  // Total de 8 segundos para completar a barra
-
-// Função para simular a progressão da barra
-function updateProgressBar() {
-  if (progress < 50) {
-    progress = (elapsed / 2);  // 50% em 2 segundos
-    progressBar.style.width = progress + '%';
-  } else if (progress < 75) {
-    progress = (elapsed / 5) + 50;  // 75% em 5 segundos
-    progressBar.style.width = progress + '%';
-  } else if (progress < 100) {
-    progress = (elapsed / 8) + 75;  // 100% em 8 segundos
-    progressBar.style.width = progress + '%';
-  } else {
-    clearInterval(progressInterval);
-    progressBar.style.opacity = 0;
-    setTimeout(() => {
-      progressBarContainer.style.display = "none";
-      gifDownload.innerHTML = `<p>Baixar GIF: <a href="${data.url}" target="_blank">Clique aqui</a></p>`; // Botão de download
-    }, 1000);
-  }
-}
-
-let progressInterval = setInterval(updateProgressBar, 1000);
-
-
-
-
-
-
-  // Intervalo para incrementar a barra de progresso
-  let progressInterval = setInterval(updateProgressBar, 1000);  // Atualiza a cada 1 segundo
-
-  // Envio dos frames para o servidor após a finalização da barra
+status.textContent = "Enviando para o servidor...";
+gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
+const barContainer = document.getElementById("progressBarContainer");
+const bar = document.getElementById("progressBar");
+barContainer.style.display = "block";
+bar.style.width = "0%";
+animarBarraProgresso(() => {
   enviarParaServidor(frames);
-}
+});
 
+
+    }
   }
 
   requestAnimationFrame(animationLoop);
@@ -867,6 +854,9 @@ function resetarPadroes() {
 
 /* ================== INICIALIZAÇÃO ================== */
 document.addEventListener("DOMContentLoaded", () => {
+document.getElementById("progressBarContainer").style.display = "none";
+document.getElementById("progressBar").style.width = "0%";
+
   // Inicializa a página com as configurações padrão
   tempoTotal = +document.getElementById("initialTime").value || 30;
   resetarPadroes(); // Aplica as configurações padrão imediatamente
@@ -874,146 +864,15 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-let cancelRequested = false;
-let cancelController = null;
-
-// Função para desabilitar os controles
-function desabilitarControles() {
-  document.querySelectorAll(".container input, .container select, .container button")
-    .forEach(el => el.disabled = true);
-  document.getElementById("cancelButton").disabled = false;  // Habilita o botão cancelar
-}
-
-// Função para habilitar os controles
-function habilitarControles() {
-  document.querySelectorAll(".container input, .container select, .container button")
-    .forEach(el => el.disabled = false);
-  document.getElementById("cancelButton").disabled = true; // Desabilita o botão cancelar após a finalização
-}
-
-// Função para iniciar a contagem
-function iniciarContagem() {
-  cancelRequested = false;  // Reseta o estado do cancelamento
-  desabilitarControles();  // Desabilita outros controles
-  frames = [];
-  const tempoTotalSegundos = tempoTotal; // tempoTotal definido no início (em segundos)
-  status.textContent = "Contando...";
-  gifDownload.innerHTML = "<p>Contando...</p>";
-
-  let startTime = null;
-  let lastFrameTime = 0;
-
-  // Função principal de animação
-  function animationLoop(timestamp) {
-    if (cancelRequested) {
-      status.textContent = "Processo cancelado!";
-      gifDownload.innerHTML = "<p>Processo cancelado.</p>";
-      habilitarControles(); // Habilita os controles novamente
-      return;
-    }
-
-    if (!startTime) startTime = timestamp;
-    const elapsed = (timestamp - startTime) / 1000;
-    let tempoRestante = tempoTotalSegundos - elapsed;
-    if (tempoRestante < 0) tempoRestante = 0;
-    const progresso = elapsed / tempoTotalSegundos;
-
-    desenharFrame(progresso, Math.floor(tempoRestante));
-
-    if (timestamp - lastFrameTime >= 50) {
-      frames.push(canvas.toDataURL("image/png"));
-      lastFrameTime = timestamp;
-    }
-
-    gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
-
-    if (elapsed < tempoTotalSegundos) {
-      requestAnimationFrame(animationLoop);
-    } else {
 status.textContent = "Enviando para o servidor...";
 gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
-
-// Exibindo a barra de progresso
-const progressBar = document.getElementById("progressBar");
-const progressBarContainer = document.getElementById("progressBarContainer");
-progressBarContainer.style.display = "block";  // Mostra a barra de progresso
-
-let progress = 0;
-
-// Função para simular a progressão da barra
-function updateProgressBar() {
-  if (progress < 50) {
-    progress += 2.5;  // Incremento até 50%
-    progressBar.style.width = progress + '%';
-  } else if (progress < 75) {
-    progress += 5;  // Incremento até 75%
-    progressBar.style.width = progress + '%';
-  } else if (progress < 100) {
-    progress += 25;  // Finalizando até 100%
-    progressBar.style.width = progress + '%';
-  } else {
-    clearInterval(progressInterval);  // Barra alcançou 100%, para a animação
-    progressBar.style.opacity = 0;  // Esmaecer a barra após 100%
-    setTimeout(() => {
-      progressBarContainer.style.display = "none";  // Esconde a barra depois de esmaecer
-    }, 1000);  // A barra esmaecerá por 1 segundo antes de desaparecer
-  }
-}
-
-// Intervalo para incrementar a barra de progresso
-let progressInterval = setInterval(updateProgressBar, 1000);  // Atualiza a cada 1 segundo
-
-// Envio dos frames para o servidor após a finalização da barra
-enviarParaServidor(frames);
-
-      enviarParaServidor(frames);
-    }
-  }
-
-  requestAnimationFrame(animationLoop);
-}
-
-// Função de cancelamento
-function cancelProcess() {
-  cancelRequested = true;  // Marca que o processo foi cancelado
-  habilitarControles();    // Habilita os controles novamente
-  status.textContent = "Processo cancelado!";
-  gifDownload.innerHTML = "<p>O processo foi cancelado.</p>";
-}
-
-// Função para enviar para o servidor
-function enviarParaServidor(frames) {
-  fetch("/api/gerar-gif", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ frames })
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.url) {
-        status.textContent = "GIF gerado com sucesso!";
-        gifDownload.innerHTML = `GIF pronto em ${Math.floor(data.estimatedTime / 1000)} segundos: <a href="${data.url}" target="_blank">Baixar</a>`;
-      } else {
-        status.textContent = "Erro ao gerar GIF.";
-        gifDownload.innerHTML = "<p>Erro ao gerar GIF.</p>";
-      }
-      habilitarControles();
-    })
-    .catch(() => {
-      status.textContent = "Erro na comunicação com o servidor.";
-      gifDownload.innerHTML = "<p>Erro na comunicação com o servidor.</p>";
-      habilitarControles();
-    });
-}
-
-
+document.getElementById("progressBarContainer").style.display = "block";
+animarBarraProgresso(() => {
+  enviarParaServidor(frames);
+});
 
 
 </script>
-
-
-
-
 
 
 
