@@ -419,7 +419,7 @@
     <!-- Coluna 4: Pré-visualização e GIF final para download -->
     <div class="col preview">
       <div class="secao">
-        <canvas id="canvas" width="7500" height="7500"
+        <canvas id="canvas" width="300" height="300"
         style="width:300px;height:300px;"></canvas>
         <p style="margin-top: 12px;">Pré-visualização</p>
       </div>
@@ -435,388 +435,329 @@
   
   
   
+  
+  
   <script>
-  /* ====== SETUP DO CANVAS COM ALTA DENSIDADE ====== */
-  const LOGICAL_SIZE = 300;                   // tamanho "visível"
-  const scale = window.devicePixelRatio || 25; // 2 é um bom default (retina)
+/* ========== CANVASES ========== */
+const LOGICAL = 300;                                // tamanho visível
+const preview = document.getElementById("canvas");  // 300×300
+const ctxPrev = preview.getContext("2d");           // escala 1
 
-  const canvas = document.getElementById("canvas");
-  canvas.width  = LOGICAL_SIZE * scale;       // 600 px se scale = 2
-  canvas.height = LOGICAL_SIZE * scale;
-  canvas.style.width  = LOGICAL_SIZE + "px"; // continua 300 × 300 na página
-  canvas.style.height = LOGICAL_SIZE + "px";
+const SCALE = 25;                                   // 300 × 25 = 7 500
+const hiCanvas = document.createElement("canvas");  // off‑screen
+hiCanvas.width  = LOGICAL * SCALE;
+hiCanvas.height = LOGICAL * SCALE;
+const ctxHi = hiCanvas.getContext("2d");
+ctxHi.scale(SCALE, SCALE);                          // usa coords lógicas
+/* ============================================ */
 
-  const ctx = canvas.getContext("2d");
-  ctx.scale(scale, scale);                    // coordenadas lógicas intactas
-  /* ================================================ */
+const status      = document.getElementById("status");
+const gifDownload = document.getElementById("gifDownload");
+let frames        = [];
+let tempoTotal    = +document.getElementById("initialTime").value || 30;
+let sombraAnterior = "#000000";
 
-  const status      = document.getElementById("status");
-  const gifDownload = document.getElementById("gifDownload");
-  let frames = [];
-  let tempoTotal = parseInt(document.getElementById("initialTime").value) || 30;
-  let sombraAnterior = "#000000";
+/* ========== UTILIDADES ========== */
+const hex = id => document.getElementById(`hex${id}`).value || "transparent";
+const cap = s  => s.charAt(0).toUpperCase() + s.slice(1);
+const $   = sel=>document.querySelectorAll(sel);
+function desabilitarControles(){ $(".container input, .container select, .container button").forEach(el=>el.disabled=true);}
+function habilitarControles(){  $(".container input, .container select, .container button").forEach(el=>el.disabled=false);}
 
-  /* ==================== UTILIDADES ==================== */
-  const hex = id => document.getElementById(`hex${id}`).value || "transparent";
-  const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
-
-  /* ================= CONTROLE DE UI =================== */
-  function desabilitarControles() {
-    document.querySelectorAll(".container input, .container select, .container button")
-            .forEach(el => el.disabled = true);
+/* ========== CAMPOS DINÂMICOS ========== */
+function atualizarCampo(tipo){
+  const color = document.getElementById(`cor${cap(tipo)}`);
+  const hexF  = document.getElementById(`hex${cap(tipo)}`);
+  if (!color) return;
+  const cb = document.getElementById(`${tipo}Transparente`) ||
+             document.getElementById(`${tipo}ContornoAtivo`);
+  if (cb?.checked){
+    hexF.value = "transparent";
+    color.disabled = hexF.disabled = true;
+  }else{
+    color.disabled = hexF.disabled = false;
+    hexF.value = color.value;
   }
-  function habilitarControles() {
-    document.querySelectorAll(".container input, .container select, .container button")
-            .forEach(el => el.disabled = false);
-    if (document.getElementById("fundoTransparente").checked) {
-      document.getElementById("corFundo").disabled = true;
-      document.getElementById("hexFundo").disabled = true;
-    }
-    if (document.getElementById("sombraTransparente").checked) {
-      document.getElementById("corSombra").disabled = true;
-      document.getElementById("hexSombra").disabled = true;
-    }
+  desenhar(ctxPrev,0,tempoTotal);
+}
+function toggleContorno(tipo){
+  document.getElementById(`grupo${cap(tipo)}Contorno`).style.display =
+    document.getElementById(`${tipo}ContornoAtivo`).checked ? "block":"none";
+  atualizarCampo(`${tipo}Contorno`);
+}
+function toggleSombra(){
+  const chk = document.getElementById("sombraTransparente");
+  const grp = document.getElementById("grupoSombra");
+  const cor = document.getElementById("corSombra");
+  const hexS= document.getElementById("hexSombra");
+  if (chk.checked){
+    sombraAnterior = cor.value;
+    grp.style.display="none";
+    hexS.value="transparent";
+    cor.disabled = hexS.disabled = true;
+  }else{
+    grp.style.display="block";
+    cor.disabled = hexS.disabled = false;
+    if (hexS.value==="transparent") cor.value = hexS.value = sombraAnterior;
   }
+  desenhar(ctxPrev,0,tempoTotal);
+}
 
-  function atualizarCampo(tipo) {
-    if (document.getElementById(`cor${capitalize(tipo)}`) && document.getElementById(`hex${capitalize(tipo)}`)) {
-      const cb = document.getElementById(`${tipo}Transparente`) || document.getElementById(`${tipo}ContornoAtivo`);
-      const color    = document.getElementById(`cor${capitalize(tipo)}`);
-      const hexField = document.getElementById(`hex${capitalize(tipo)}`);
-      if (cb && cb.checked) {
-        hexField.value = "transparent";
-        color.disabled = true;
-        hexField.disabled = true;
-      } else {
-        color.disabled = false;
-        hexField.disabled = false;
-        hexField.value = color.value;
-      }
-    }
-    desenharFrame(0, tempoTotal);
-  }
-
-  function toggleContorno(tipo) {
-    const check = document.getElementById(`${tipo}ContornoAtivo`);
-    const grupo = document.getElementById(`grupo${capitalize(tipo)}Contorno`);
-    grupo.style.display = check.checked ? "block" : "none";
-    atualizarCampo(`${tipo}Contorno`);
-  }
-
-  function toggleSombra() {
-    const check      = document.getElementById("sombraTransparente");
-    const grupoSombra = document.getElementById("grupoSombra");
-    const corSombra   = document.getElementById("corSombra");
-    const hexSombra   = document.getElementById("hexSombra");
-
-    if (check.checked) {
-      sombraAnterior = corSombra.value;
-      grupoSombra.style.display = "none";
-      hexSombra.value = "transparent";
-      corSombra.disabled = true;
-      hexSombra.disabled = true;
-    } else {
-      grupoSombra.style.display = "block";
-      corSombra.disabled = false;
-      hexSombra.disabled = false;
-      if (hexSombra.value === "transparent") {
-        corSombra.value = sombraAnterior;
-        hexSombra.value = sombraAnterior;
-      }
-    }
-    desenharFrame(0, tempoTotal);
-  }
-
-  ["Circulo", "Borda", "Texto", "Fundo", "Sombra", "TextoContorno"].forEach(tipo => {
-    document.getElementById(`cor${tipo}`).addEventListener("input", e => {
-      document.getElementById(`hex${tipo}`).value = e.target.value;
-      desenharFrame(0, tempoTotal);
-    });
-    document.getElementById(`hex${tipo}`).addEventListener("input", e => {
-      document.getElementById(`cor${tipo}`).value = e.target.value;
-      desenharFrame(0, tempoTotal);
-    });
+/* ========== EVENTOS DE COR ========== */
+["Circulo","Borda","Texto","Fundo","Sombra","TextoContorno"].forEach(t=>{
+  document.getElementById(`cor${t}`).addEventListener("input",e=>{
+    document.getElementById(`hex${t}`).value = e.target.value;
+    desenhar(ctxPrev,0,tempoTotal);
   });
-
-  /* ======== LISTENERS DE SLIDERS E SELECTS ======== */
-  const binds = [
-    ["tamanhoTexto", "displayTamanhoTexto"],
-    ["grossuraBordaContorno", "displayGrossuraBordaContorno"],
-    ["grossuraCirculoContorno", "displayGrossuraCirculoContorno"],
-    ["grossuraTextoContorno", "displayGrossuraTextoContorno"],
-    ["grossuraFundoContorno", "displayGrossuraFundoContorno"],
-    ["grossuraCirculo", "displayGrossuraCirculo"],
-    ["grossuraBorda", "displayGrossuraBorda"]
-  ];
-  binds.forEach(([input, span]) => {
-    document.getElementById(input).addEventListener("input", e => {
-      document.getElementById(span).textContent = e.target.value;
-      desenharFrame(0, tempoTotal);
-    });
+  document.getElementById(`hex${t}`).addEventListener("input",e=>{
+    document.getElementById(`cor${t}`).value = e.target.value;
+    desenhar(ctxPrev,0,tempoTotal);
   });
+});
 
-  document.getElementById("sombra").addEventListener("input", () => desenharFrame(0, tempoTotal));
-  document.getElementById("sombraX").addEventListener("input", () => desenharFrame(0, tempoTotal));
-  document.getElementById("sombraY").addEventListener("input", () => desenharFrame(0, tempoTotal));
-  document.getElementById("tipoTraco").addEventListener("change", () => desenharFrame(0, tempoTotal));
-
-  document.getElementById("initialTime").addEventListener("input", () => {
-    tempoTotal = parseInt(document.getElementById("initialTime").value) || 0;
-    desenharFrame(0, tempoTotal);
+/* ========== SLIDERS ========== */
+[
+ ["tamanhoTexto","displayTamanhoTexto"],
+ ["grossuraBordaContorno","displayGrossuraBordaContorno"],
+ ["grossuraCirculoContorno","displayGrossuraCirculoContorno"],
+ ["grossuraTextoContorno","displayGrossuraTextoContorno"],
+ ["grossuraFundoContorno","displayGrossuraFundoContorno"],
+ ["grossuraCirculo","displayGrossuraCirculo"],
+ ["grossuraBorda","displayGrossuraBorda"]
+].forEach(([inp,span])=>{
+  document.getElementById(inp).addEventListener("input",e=>{
+    document.getElementById(span).textContent = e.target.value;
+    desenhar(ctxPrev,0,tempoTotal);
   });
+});
+["sombra","sombraX","sombraY","tipoTraco"].forEach(id=>{
+  document.getElementById(id).addEventListener("input",()=>desenhar(ctxPrev,0,tempoTotal));
+});
+document.getElementById("initialTime").addEventListener("input",()=>{
+  tempoTotal = +document.getElementById("initialTime").value || 0;
+  desenhar(ctxPrev,0,tempoTotal);
+});
 
-  /* ================= DESENHO ================= */
-  function desenharFrame(progresso, tempoRestante) {
-    const centro = 150, raio = 100;
-    const anguloInicio = -Math.PI / 2;
-    const anguloFim    = anguloInicio + progresso * 2 * Math.PI;
+/* ========== FUNÇÃO DE DESENHO ========== */
+function desenhar(ctx, prog, rest){
+  const c=150,r=100,ai=-Math.PI/2,af=ai+prog*2*Math.PI;
+  const cf=hex("Fundo"), cb=hex("Borda"), cc=hex("Circulo"),
+        ct=hex("Texto"), cs=hex("Sombra"),
+        tp=document.getElementById("tipoTraco").value;
 
-    const corFundo  = hex("Fundo");
-    const corBorda  = hex("Borda");
-    const corCirculo= hex("Circulo");
-    const corTexto  = hex("Texto");
-    const corSombra = hex("Sombra");
-    const tipoTraco = document.getElementById("tipoTraco").value;
-    const sombra    = +document.getElementById("sombra").value;
-    const offsetX   = +document.getElementById("sombraX").value;
-    const offsetY   = +document.getElementById("sombraY").value;
-    const tamanhoTexto     = +document.getElementById("tamanhoTexto").value;
-    const grossuraCirculo  = +document.getElementById("grossuraCirculo").value;
-    const grossuraBorda    = +document.getElementById("grossuraBorda").value;
+  const sb=+document.getElementById("sombra").value,
+        ox=+document.getElementById("sombraX").value,
+        oy=+document.getElementById("sombraY").value,
+        ft=+document.getElementById("tamanhoTexto").value,
+        gC=+document.getElementById("grossuraCirculo").value,
+        gB=+document.getElementById("grossuraBorda").value;
 
-    ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
+  ctx.clearRect(0,0,LOGICAL,LOGICAL);
+  if(cf!=="transparent"){ctx.fillStyle=cf;ctx.fillRect(0,0,LOGICAL,LOGICAL);}
 
-    // Fundo
-    if (corFundo !== "transparent") {
-      ctx.fillStyle = corFundo;
-      ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
-    }
-
-    // Contorno do fundo
-    if (document.getElementById("fundoContornoAtivo")?.checked) {
-      const cor       = document.getElementById("hexFundoContorno").value;
-      const grossura  = +document.getElementById("grossuraFundoContorno").value;
-      const tipo      = document.getElementById("tipoFundoContorno").value;
-      ctx.beginPath();
-      ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
-      ctx.strokeStyle = cor;
-      ctx.lineWidth   = grossura;
-      ctx.strokeRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
-    }
-
-    // Borda
-    if (corBorda !== "transparent") {
-      ctx.beginPath();
-      ctx.setLineDash([]);
-      ctx.arc(centro, centro, raio, 0, 2*Math.PI);
-      ctx.strokeStyle   = corBorda;
-      ctx.lineWidth     = grossuraBorda;
-      ctx.shadowBlur    = sombra;
-      ctx.shadowOffsetX = offsetX;
-      ctx.shadowOffsetY = offsetY;
-      ctx.shadowColor   = corSombra;
-      ctx.stroke();
-    }
-
-    // Contorno da borda
-    if (document.getElementById("bordaContornoAtivo")?.checked) {
-      const cor       = document.getElementById("hexBordaContorno").value;
-      const grossura  = +document.getElementById("grossuraBordaContorno").value;
-      const tipo      = document.getElementById("tipoBordaContorno").value;
-      ctx.beginPath();
-      ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
-      ctx.arc(centro, centro, raio, 0, 2*Math.PI);
-      ctx.strokeStyle = cor;
-      ctx.lineWidth   = grossura;
-      ctx.stroke();
-    }
-
-    // Círculo progressivo
-    if (corCirculo !== "transparent") {
-      ctx.beginPath();
-      ctx.setLineDash(tipoTraco === "dashed" ? [10,10] : tipoTraco === "dotted" ? [2,6] : []);
-      ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
-      ctx.strokeStyle   = corCirculo;
-      ctx.lineWidth     = grossuraCirculo;
-      ctx.shadowBlur    = sombra;
-      ctx.shadowOffsetX = offsetX;
-      ctx.shadowOffsetY = offsetY;
-      ctx.shadowColor   = corSombra;
-      ctx.stroke();
-    }
-
-    // Contorno do círculo
-    if (document.getElementById("circuloContornoAtivo")?.checked) {
-      const cor       = document.getElementById("hexCirculoContorno").value;
-      const grossura  = +document.getElementById("grossuraCirculoContorno").value;
-      const tipo      = document.getElementById("tipoCirculoContorno").value;
-      ctx.beginPath();
-      ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
-      ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
-      ctx.strokeStyle = cor;
-      ctx.lineWidth   = grossura;
-      ctx.stroke();
-    }
-
-    // Texto
-    ctx.fillStyle      = corTexto;
-    ctx.shadowBlur     = sombra;
-    ctx.shadowOffsetX  = offsetX;
-    ctx.shadowOffsetY  = offsetY;
-    ctx.shadowColor    = corSombra;
-    ctx.font           = `bold ${tamanhoTexto}px Arial`;
-    ctx.textAlign      = "center";
-    ctx.textBaseline   = "middle";
-    ctx.fillText(tempoRestante.toString(), centro, centro);
-
-    // Contorno do texto
-    if (document.getElementById("textoContornoAtivo")?.checked) {
-      const cor       = document.getElementById("hexTextoContorno").value;
-      const grossura  = +document.getElementById("grossuraTextoContorno").value;
-      const tipo      = document.getElementById("tipoTextoContorno").value;
-      ctx.beginPath();
-      ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
-      ctx.strokeStyle = cor;
-      ctx.lineWidth   = grossura;
-      ctx.strokeText(tempoRestante.toString(), centro, centro);
-    }
+  if(document.getElementById("fundoContornoAtivo")?.checked){
+    const cor=document.getElementById("hexFundoContorno").value,
+          g=+document.getElementById("grossuraFundoContorno").value,
+          t=document.getElementById("tipoFundoContorno").value;
+    ctx.beginPath();ctx.setLineDash(t==="dashed"?[10,10]:t==="dotted"?[2,6]:[]);
+    ctx.strokeStyle=cor;ctx.lineWidth=g;ctx.strokeRect(0,0,LOGICAL,LOGICAL);
   }
 
-  /* ================== CONTAGEM ================== */
-  function iniciarContagem() {
-    desabilitarControles();
-    frames = [];
-    let tempoRestante = tempoTotal;
-    status.textContent = "Contando...";
-    gifDownload.innerHTML = "<p>Contando...</p>";
-
-    const intervalo = setInterval(() => {
-      const progresso = (tempoTotal - tempoRestante) / tempoTotal;
-      desenharFrame(progresso, tempoRestante);
-      frames.push(canvas.toDataURL("image/png"));
-      tempoRestante--;
-      if (tempoRestante < 0) {
-        clearInterval(intervalo);
-        status.textContent = "Enviando para o servidor...";
-        gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
-        enviarParaServidor(frames);
-      }
-    }, 1000);
+  if(cb!=="transparent"){
+    ctx.beginPath();ctx.setLineDash([]);ctx.arc(c,c,r,0,2*Math.PI);
+    ctx.strokeStyle=cb;ctx.lineWidth=gB;
+    ctx.shadowBlur=sb;ctx.shadowOffsetX=ox;ctx.shadowOffsetY=oy;ctx.shadowColor=cs;
+    ctx.stroke();
+  }
+  if(document.getElementById("bordaContornoAtivo")?.checked){
+    const cor=document.getElementById("hexBordaContorno").value,
+          g=+document.getElementById("grossuraBordaContorno").value,
+          t=document.getElementById("tipoBordaContorno").value;
+    ctx.beginPath();ctx.setLineDash(t==="dashed"?[10,10]:t==="dotted"?[2,6]:[]);
+    ctx.arc(c,c,r,0,2*Math.PI);ctx.strokeStyle=cor;ctx.lineWidth=g;ctx.stroke();
   }
 
-  /* =============== ENVIO AO SERVIDOR =============== */
-  function enviarParaServidor(frames) {
-    fetch("/api/gerar-gif", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ frames })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.url) {
-          status.textContent = "GIF gerado com sucesso!";
-          gifDownload.innerHTML = `GIF pronto: <a href="${data.url}" target="_blank">Baixar</a>`;
-        } else {
-          status.textContent = "Erro ao gerar GIF.";
-          gifDownload.innerHTML = "<p>Erro ao gerar GIF.</p>";
-        }
-        habilitarControles();
-      })
-      .catch(() => {
-        status.textContent = "Erro na comunicação com o servidor.";
-        gifDownload.innerHTML = "<p>Erro na comunicação com o servidor.</p>";
-        habilitarControles();
-      });
+  if(cc!=="transparent"){
+    ctx.beginPath();ctx.setLineDash(tp==="dashed"?[10,10]:tp==="dotted"?[2,6]:[]);
+    ctx.arc(c,c,r,ai,af);ctx.strokeStyle=cc;ctx.lineWidth=gC;
+    ctx.shadowBlur=sb;ctx.shadowOffsetX=ox;ctx.shadowOffsetY=oy;ctx.shadowColor=cs;
+    ctx.stroke();
+  }
+  if(document.getElementById("circuloContornoAtivo")?.checked){
+    const cor=document.getElementById("hexCirculoContorno").value,
+          g=+document.getElementById("grossuraCirculoContorno").value,
+          t=document.getElementById("tipoCirculoContorno").value;
+    ctx.beginPath();ctx.setLineDash(t==="dashed"?[10,10]:t==="dotted"?[2,6]:[]);
+    ctx.arc(c,c,r,ai,af);ctx.strokeStyle=cor;ctx.lineWidth=g;ctx.stroke();
   }
 
-  /* ================ RESETAR PADRÕES ================ */
-  function resetarPadroes() {
-    // Valor Inicial do Timer
-    document.getElementById("initialTime").value = 30;
-    tempoTotal = 30;
+  ctx.fillStyle=ct;ctx.shadowBlur=sb;ctx.shadowOffsetX=ox;ctx.shadowOffsetY=oy;ctx.shadowColor=cs;
+  ctx.font=`bold ${ft}px Arial`;ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillText(rest.toString(),c,c);
 
-    // CÍRCULO
-    document.getElementById("circuloTransparente").checked = false;
-    document.getElementById("corCirculo").value = "#4A90E2";
-    document.getElementById("hexCirculo").value = "#4A90E2";
-    document.getElementById("grossuraCirculo").value = 28;
-    document.getElementById("displayGrossuraCirculo").textContent = 28;
-    document.getElementById("circuloContornoAtivo").checked = false;
-    document.getElementById("grupoCirculoContorno").style.display = "none";
-    document.getElementById("corCirculoContorno").value = "#000000";
-    document.getElementById("hexCirculoContorno").value = "#000000";
-    document.getElementById("grossuraCirculoContorno").value = 2;
-    document.getElementById("displayGrossuraCirculoContorno").textContent = 2;
-    document.getElementById("tipoCirculoContorno").value = "solid";
-
-    // BORDA
-    document.getElementById("bordaTransparente").checked = false;
-    document.getElementById("corBorda").value = "#2D3E50";
-    document.getElementById("hexBorda").value = "#2D3E50";
-    document.getElementById("grossuraBorda").value = 5;
-    document.getElementById("displayGrossuraBorda").textContent = 5;
-    document.getElementById("bordaContornoAtivo").checked = false;
-    document.getElementById("grupoBordaContorno").style.display = "none";
-    document.getElementById("corBordaContorno").value = "#000000";
-    document.getElementById("hexBordaContorno").value = "#000000";
-    document.getElementById("grossuraBordaContorno").value = 2;
-    document.getElementById("displayGrossuraBordaContorno").textContent = 2;
-    document.getElementById("tipoBordaContorno").value = "solid";
-
-    // TEXTO
-    document.getElementById("corTexto").value = "#ffffff";
-    document.getElementById("hexTexto").value = "#ffffff";
-    document.getElementById("tamanhoTexto").value = 90;
-    document.getElementById("displayTamanhoTexto").textContent = 90;
-    document.getElementById("textoContornoAtivo").checked = false;
-    document.getElementById("grupoTextoContorno").style.display = "none";
-    document.getElementById("corTextoContorno").value = "#000000";
-    document.getElementById("hexTextoContorno").value = "#000000";
-    document.getElementById("grossuraTextoContorno").value = 2;
-    document.getElementById("displayGrossuraTextoContorno").textContent = 2;
-    document.getElementById("tipoTextoContorno").value = "solid";
-
-    // FUNDO
-    document.getElementById("fundoTransparente").checked = true;
-    document.getElementById("corFundo").value = "#000000";
-    document.getElementById("hexFundo").value = "transparent";
-    document.getElementById("corFundo").disabled = true;
-    document.getElementById("hexFundo").disabled = true;
-    document.getElementById("fundoContornoAtivo").checked = false;
-    document.getElementById("grupoFundoContorno").style.display = "none";
-    document.getElementById("corFundoContorno").value = "#000000";
-    document.getElementById("hexFundoContorno").value = "#000000";
-    document.getElementById("grossuraFundoContorno").value = 2;
-    document.getElementById("displayGrossuraFundoContorno").textContent = 2;
-    document.getElementById("tipoFundoContorno").value = "solid";
-
-    // SOMBRA
-    document.getElementById("sombraTransparente").checked = false;
-    document.getElementById("corSombra").value = "#000000";
-    document.getElementById("hexSombra").value = "#000000";
-    document.getElementById("corSombra").disabled = false;
-    document.getElementById("hexSombra").disabled = false;
-    document.getElementById("grupoSombra").style.display = "block";
-    document.getElementById("sombra").value = 8;
-    document.getElementById("sombraX").value = 4;
-    document.getElementById("sombraY").value = 4;
-    sombraAnterior = "#000000";
-
-    // TRAÇADO
-    document.getElementById("tipoTraco").value = "solid";
-
-    // Redesenha preview
-    desenharFrame(0, tempoTotal);
+  if(document.getElementById("textoContornoAtivo")?.checked){
+    const cor=document.getElementById("hexTextoContorno").value,
+          g=+document.getElementById("grossuraTextoContorno").value,
+          t=document.getElementById("tipoTextoContorno").value;
+    ctx.beginPath();ctx.setLineDash(t==="dashed"?[10,10]:t==="dotted"?[2,6]:[]);
+    ctx.strokeStyle=cor;ctx.lineWidth=g;ctx.strokeText(rest.toString(),c,c);
   }
+}
 
-  /* ============== INICIALIZAÇÃO ============== */
-  document.addEventListener("DOMContentLoaded", () => {
-    tempoTotal = +document.getElementById("initialTime").value || 30;
-    ["circulo", "borda", "texto", "fundo"].forEach(toggleContorno);
-    toggleSombra();
-    desenharFrame(0, tempoTotal);
+/* ========== CONTAGEM + CAPTURA ========== */
+function iniciarContagem(){
+  desabilitarControles();
+  frames=[];
+  status.textContent="Gerando…";
+  gifDownload.innerHTML="<p>Processando…</p>";
+
+  const fps=60, dur=tempoTotal*1000, passo=1000/fps;
+  const start=performance.now();
+  let last=-passo;                     // evita captura no t=0
+
+  ctxPrev.imageSmoothingEnabled=false;
+  desenhar(ctxPrev,0,tempoTotal);      // preview inicial
+
+  function loop(now){
+    const el   = now - start;
+    const prog = Math.min(el/dur,1);
+    const rest = Math.ceil((dur-el)/1000);
+
+    desenhar(ctxPrev, prog, rest);     // preview
+    desenhar(ctxHi,   prog, rest);     // hi‑res
+
+    if (prog>0 && now - last >= passo){
+      frames.push(hiCanvas.toDataURL("image/png"));
+      last = now;
+    }
+
+    if (el < dur){
+      requestAnimationFrame(loop);
+    }else{
+      status.textContent="Enviando…";
+      gifDownload.innerHTML="<p>Enviando…</p>";
+      enviarParaServidor(frames);
+    }
+  }
+  requestAnimationFrame(loop);
+}
+
+/* ========== ENVIO AO SERVIDOR (original) ========== */
+function enviarParaServidor(frames){
+  fetch("/api/gerar-gif",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({frames})
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    if(d.url){
+      status.textContent="GIF gerado com sucesso!";
+      gifDownload.innerHTML=`GIF pronto: <a href="${d.url}" target="_blank">Baixar</a>`;
+    }else{
+      status.textContent="Erro ao gerar GIF.";
+      gifDownload.innerHTML="<p>Erro ao gerar GIF.</p>";
+    }
+    habilitarControles();
+  })
+  .catch(()=>{
+    status.textContent="Erro na comunicação com o servidor.";
+    gifDownload.innerHTML="<p>Erro na comunicação com o servidor.</p>";
+    habilitarControles();
   });
+}
+
+/* ========== RESETAR PADRÕES (original completo) ========== */
+function resetarPadroes(){
+  /* ----- TIMER ----- */
+  document.getElementById("initialTime").value = 30;
+  tempoTotal = 30;
+
+  /* ----- CÍRCULO ----- */
+  document.getElementById("circuloTransparente").checked = false;
+  document.getElementById("corCirculo").value = "#4A90E2";
+  document.getElementById("hexCirculo").value = "#4A90E2";
+  document.getElementById("grossuraCirculo").value = 28;
+  document.getElementById("displayGrossuraCirculo").textContent = 28;
+  document.getElementById("circuloContornoAtivo").checked = false;
+  document.getElementById("grupoCirculoContorno").style.display = "none";
+  document.getElementById("corCirculoContorno").value = "#000000";
+  document.getElementById("hexCirculoContorno").value = "#000000";
+  document.getElementById("grossuraCirculoContorno").value = 2;
+  document.getElementById("displayGrossuraCirculoContorno").textContent = 2;
+  document.getElementById("tipoCirculoContorno").value = "solid";
+
+  /* ----- BORDA ----- */
+  document.getElementById("bordaTransparente").checked = false;
+  document.getElementById("corBorda").value = "#2D3E50";
+  document.getElementById("hexBorda").value = "#2D3E50";
+  document.getElementById("grossuraBorda").value = 5;
+  document.getElementById("displayGrossuraBorda").textContent = 5;
+  document.getElementById("bordaContornoAtivo").checked = false;
+  document.getElementById("grupoBordaContorno").style.display = "none";
+  document.getElementById("corBordaContorno").value = "#000000";
+  document.getElementById("hexBordaContorno").value = "#000000";
+  document.getElementById("grossuraBordaContorno").value = 2;
+  document.getElementById("displayGrossuraBordaContorno").textContent = 2;
+  document.getElementById("tipoBordaContorno").value = "solid";
+
+  /* ----- TEXTO ----- */
+  document.getElementById("corTexto").value = "#ffffff";
+  document.getElementById("hexTexto").value = "#ffffff";
+  document.getElementById("tamanhoTexto").value = 90;
+  document.getElementById("displayTamanhoTexto").textContent = 90;
+  document.getElementById("textoContornoAtivo").checked = false;
+  document.getElementById("grupoTextoContorno").style.display = "none";
+  document.getElementById("corTextoContorno").value = "#000000";
+  document.getElementById("hexTextoContorno").value = "#000000";
+  document.getElementById("grossuraTextoContorno").value = 2;
+  document.getElementById("displayGrossuraTextoContorno").textContent = 2;
+  document.getElementById("tipoTextoContorno").value = "solid";
+
+  /* ----- FUNDO ----- */
+  document.getElementById("fundoTransparente").checked = true;
+  document.getElementById("corFundo").value = "#000000";
+  document.getElementById("hexFundo").value = "transparent";
+  document.getElementById("corFundo").disabled = true;
+  document.getElementById("hexFundo").disabled = true;
+  document.getElementById("fundoContornoAtivo").checked = false;
+  document.getElementById("grupoFundoContorno").style.display = "none";
+  document.getElementById("corFundoContorno").value = "#000000";
+  document.getElementById("hexFundoContorno").value = "#000000";
+  document.getElementById("grossuraFundoContorno").value = 2;
+  document.getElementById("displayGrossuraFundoContorno").textContent = 2;
+  document.getElementById("tipoFundoContorno").value = "solid";
+
+  /* ----- SOMBRA ----- */
+  document.getElementById("sombraTransparente").checked = false;
+  document.getElementById("corSombra").value = "#000000";
+  document.getElementById("hexSombra").value = "#000000";
+  document.getElementById("corSombra").disabled = false;
+  document.getElementById("hexSombra").disabled = false;
+  document.getElementById("grupoSombra").style.display = "block";
+  document.getElementById("sombra").value = 8;
+  document.getElementById("sombraX").value = 4;
+  document.getElementById("sombraY").value = 4;
+  sombraAnterior = "#000000";
+
+  /* ----- TRAÇADO ----- */
+  document.getElementById("tipoTraco").value = "solid";
+
+  /* ----- Atualiza preview ----- */
+  desenhar(ctxPrev,0,tempoTotal);
+}
+
+/* ========== INICIALIZAÇÃO ========== */
+document.addEventListener("DOMContentLoaded",()=>{
+  tempoTotal = +document.getElementById("initialTime").value || 30;
+  ["circulo","borda","texto","fundo"].forEach(toggleContorno);
+  toggleSombra();
+  desenhar(ctxPrev,0,tempoTotal);      // preview vazio
+});
 </script>
+
+  
+  
 
   
   
