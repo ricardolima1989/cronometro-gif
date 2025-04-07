@@ -733,27 +733,37 @@ function iniciarContagem() {
   const progressBarContainer = document.getElementById("progressBarContainer");
   progressBarContainer.style.display = "block";  // Mostra a barra de progresso
 
-  let progress = 0;
-  
-  // Função para simular a progressão da barra
-  function updateProgressBar() {
-    if (progress < 50) {
-      progress += 2.5;  // Incremento até 50%
-      progressBar.style.width = progress + '%';
-    } else if (progress < 75) {
-      progress += 5;  // Incremento até 75%
-      progressBar.style.width = progress + '%';
-    } else if (progress < 100) {
-      progress += 25;  // Finalizando até 100%
-      progressBar.style.width = progress + '%';
-    } else {
-      clearInterval(progressInterval);  // Barra alcançou 100%, para a animação
-      progressBar.style.opacity = 0;  // Esmaecer a barra após 100%
-      setTimeout(() => {
-        progressBarContainer.style.display = "none";  // Esconde a barra depois de esmaecer
-      }, 1000);  // A barra esmaecerá por 1 segundo antes de desaparecer
-    }
+
+let progress = 0;
+let totalTime = 8;  // Total de 8 segundos para completar a barra
+
+// Função para simular a progressão da barra
+function updateProgressBar() {
+  if (progress < 50) {
+    progress = (elapsed / 2);  // 50% em 2 segundos
+    progressBar.style.width = progress + '%';
+  } else if (progress < 75) {
+    progress = (elapsed / 5) + 50;  // 75% em 5 segundos
+    progressBar.style.width = progress + '%';
+  } else if (progress < 100) {
+    progress = (elapsed / 8) + 75;  // 100% em 8 segundos
+    progressBar.style.width = progress + '%';
+  } else {
+    clearInterval(progressInterval);
+    progressBar.style.opacity = 0;
+    setTimeout(() => {
+      progressBarContainer.style.display = "none";
+      gifDownload.innerHTML = `<p>Baixar GIF: <a href="${data.url}" target="_blank">Clique aqui</a></p>`; // Botão de download
+    }, 1000);
   }
+}
+
+let progressInterval = setInterval(updateProgressBar, 1000);
+
+
+
+
+
 
   // Intervalo para incrementar a barra de progresso
   let progressInterval = setInterval(updateProgressBar, 1000);  // Atualiza a cada 1 segundo
