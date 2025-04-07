@@ -572,7 +572,7 @@ document.getElementById("initialTime").addEventListener("input", () => {
 function desenharFrame(progresso, tempoRestante) {
   const centro = 150, raio = 100;
   const anguloInicio = -Math.PI / 2;
-  const anguloFim    = anguloInicio + progresso * 2 * Math.PI;
+  const anguloFim = anguloInicio + Math.min(progresso, 1) * 2 * Math.PI;
 
   const corFundo   = hex("Fundo");
   const corBorda   = hex("Borda");
@@ -641,7 +641,8 @@ function desenharFrame(progresso, tempoRestante) {
     ctx.setLineDash(tipoTraco === "dashed" ? [10,10] : tipoTraco === "dotted" ? [2,6] : []);
     ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
     ctx.strokeStyle   = corCirculo;
-    ctx.lineWidth     = grossuraCirculo;
+	ctx.lineCap = "round";
+	ctx.lineWidth = grossuraCirculo;
     ctx.shadowBlur    = sombra;
     ctx.shadowOffsetX = offsetX;
     ctx.shadowOffsetY = offsetY;
