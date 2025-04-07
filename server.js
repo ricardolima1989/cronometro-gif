@@ -35,7 +35,7 @@ app.post('/api/gerar-gif', async (req, res) => {
     encoder.createReadStream().pipe(outStream);
     encoder.start();
     encoder.setRepeat(0);            // loop infinito
-    const FPS = 4;                   // 4 frames por segundo
+    const FPS = 2;                   // 4 frames por segundo
     encoder.setDelay(1000 / FPS);      // 1000/4 = 250ms por frame
     encoder.setQuality(5);           // 1‑30 (1 = melhor)
 
