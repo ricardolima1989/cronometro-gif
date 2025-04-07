@@ -1,4 +1,17 @@
-/* ROTA PRINCIPAL */
+const express = require('express');
+const bodyParser = require('body-parser');
+const fs = require('fs');
+const GIFEncoder = require('gifencoder');
+const { createCanvas, loadImage } = require('canvas');
+
+// Definindo o app do express
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(express.static('public'));
+
+/* ========= ROTA PRINCIPAL ========= */
 app.post('/api/gerar-gif', async (req, res) => {
   try {
     const frames = req.body.frames;
@@ -53,4 +66,9 @@ app.post('/api/gerar-gif', async (req, res) => {
     console.error('Erro ao gerar GIF:', err);
     res.status(500).json({ error: 'Erro ao gerar GIF' });
   }
+});
+/* =================================== */
+
+app.listen(PORT, () => {
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
