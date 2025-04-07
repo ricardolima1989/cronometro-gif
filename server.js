@@ -31,7 +31,7 @@ app.post('/api/gerar-gif', async (req, res) => {
     encoder.createReadStream().pipe(outStream);
     encoder.start();
     encoder.setRepeat(0);      // loop infinito
-    encoder.setDelay(1000);    // 1 fps
+    encoder.setDelay(60000);    // 1 fps
     encoder.setQuality(1);     // 1‑30 (1 = melhor)
 
     /* --- canvas buffer --- */
