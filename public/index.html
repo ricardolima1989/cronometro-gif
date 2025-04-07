@@ -586,12 +586,13 @@
 	ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);  // Limpa o canvas, garantindo que o fundo seja transparente
 
 
-    // Fundo
-// Fundo
-if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").checked) {
-  ctx.fillStyle = corFundo;
-  ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
-}
+	// Limpeza do canvas antes de começar a desenhar
+	// Condição para desenhar o fundo (só se fundo não for transparente)
+	if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").checked) {
+	  ctx.fillStyle = corFundo;
+	  ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE); // Preenche o fundo com a cor escolhida
+	}
+
 
     // Contorno do fundo
     if (document.getElementById("fundoContornoAtivo")?.checked) {
