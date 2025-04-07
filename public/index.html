@@ -432,330 +432,333 @@
     </div>
   </div>
   
-  <script>
-  /* ====== SETUP DO CANVAS COM ALTA DENSIDADE ====== */
-  const LOGICAL_SIZE = 300;                   // Tamanho "visível"
-  const scale = window.devicePixelRatio || 25; // Se não tiver devicePixelRatio, assume 25
+  
+  
+  
+  <!-- <script> -->
+  <!-- /* ====== SETUP DO CANVAS COM ALTA DENSIDADE ====== */ -->
+  <!-- const LOGICAL_SIZE = 300;                   // Tamanho "visível" -->
+  <!-- const scale = window.devicePixelRatio || 25; // Se não tiver devicePixelRatio, assume 25 -->
 
-  const canvas = document.getElementById("canvas");
-  canvas.width  = LOGICAL_SIZE * scale;       // Ex.: 600 px se scale = 2
-  canvas.height = LOGICAL_SIZE * scale;
-  canvas.style.width  = LOGICAL_SIZE + "px";    // Continua 300x300 na página
-  canvas.style.height = LOGICAL_SIZE + "px";
+  <!-- const canvas = document.getElementById("canvas"); -->
+  <!-- canvas.width  = LOGICAL_SIZE * scale;       // Ex.: 600 px se scale = 2 -->
+  <!-- canvas.height = LOGICAL_SIZE * scale; -->
+  <!-- canvas.style.width  = LOGICAL_SIZE + "px";    // Continua 300x300 na página -->
+  <!-- canvas.style.height = LOGICAL_SIZE + "px"; -->
 
-  const ctx = canvas.getContext("2d");
-  ctx.scale(scale, scale);                    // Mantém as coordenadas lógicas
+  <!-- const ctx = canvas.getContext("2d"); -->
+  <!-- ctx.scale(scale, scale);                    // Mantém as coordenadas lógicas -->
 
-  /* ================================================ */
+  <!-- /* ================================================ */ -->
 
-  const status      = document.getElementById("status");
-  const gifDownload = document.getElementById("gifDownload");
-  let frames = [];
-  let tempoTotal = parseInt(document.getElementById("initialTime").value) || 30;
-  let sombraAnterior = "#000000";
+  <!-- const status      = document.getElementById("status"); -->
+  <!-- const gifDownload = document.getElementById("gifDownload"); -->
+  <!-- let frames = []; -->
+  <!-- let tempoTotal = parseInt(document.getElementById("initialTime").value) || 30; -->
+  <!-- let sombraAnterior = "#000000"; -->
 
-  /* ==================== UTILIDADES ==================== */
-  const hex = id => document.getElementById(`hex${id}`).value || "transparent";
-  const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
+  <!-- /* ==================== UTILIDADES ==================== */ -->
+  <!-- const hex = id => document.getElementById(`hex${id}`).value || "transparent"; -->
+  <!-- const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1); -->
 
-  /* ================= CONTROLE DE UI =================== */
-  function desabilitarControles() {
-    document.querySelectorAll(".container input, .container select, .container button")
-            .forEach(el => el.disabled = true);
-  }
-  function habilitarControles() {
-    document.querySelectorAll(".container input, .container select, .container button")
-            .forEach(el => el.disabled = false);
-    if (document.getElementById("fundoTransparente").checked) {
-      document.getElementById("corFundo").disabled = true;
-      document.getElementById("hexFundo").disabled = true;
-    }
-    if (document.getElementById("sombraTransparente").checked) {
-      document.getElementById("corSombra").disabled = true;
-      document.getElementById("hexSombra").disabled = true;
-    }
-  }
+  <!-- /* ================= CONTROLE DE UI =================== */ -->
+  <!-- function desabilitarControles() { -->
+    <!-- document.querySelectorAll(".container input, .container select, .container button") -->
+            <!-- .forEach(el => el.disabled = true); -->
+  <!-- } -->
+  <!-- function habilitarControles() { -->
+    <!-- document.querySelectorAll(".container input, .container select, .container button") -->
+            <!-- .forEach(el => el.disabled = false); -->
+    <!-- if (document.getElementById("fundoTransparente").checked) { -->
+      <!-- document.getElementById("corFundo").disabled = true; -->
+      <!-- document.getElementById("hexFundo").disabled = true; -->
+    <!-- } -->
+    <!-- if (document.getElementById("sombraTransparente").checked) { -->
+      <!-- document.getElementById("corSombra").disabled = true; -->
+      <!-- document.getElementById("hexSombra").disabled = true; -->
+    <!-- } -->
+  <!-- } -->
 
-  function atualizarCampo(tipo) {
-    if (document.getElementById(`cor${capitalize(tipo)}`) && document.getElementById(`hex${capitalize(tipo)}`)) {
-      const cb = document.getElementById(`${tipo}Transparente`) || document.getElementById(`${tipo}ContornoAtivo`);
-      const color    = document.getElementById(`cor${capitalize(tipo)}`);
-      const hexField = document.getElementById(`hex${capitalize(tipo)}`);
-      if (cb && cb.checked) {
-        hexField.value = "transparent";
-        color.disabled = true;
-        hexField.disabled = true;
-      } else {
-        color.disabled = false;
-        hexField.disabled = false;
-        hexField.value = color.value;
-      }
-    }
-    desenharFrame(0, tempoTotal);
-  }
+  <!-- function atualizarCampo(tipo) { -->
+    <!-- if (document.getElementById(`cor${capitalize(tipo)}`) && document.getElementById(`hex${capitalize(tipo)}`)) { -->
+      <!-- const cb = document.getElementById(`${tipo}Transparente`) || document.getElementById(`${tipo}ContornoAtivo`); -->
+      <!-- const color    = document.getElementById(`cor${capitalize(tipo)}`); -->
+      <!-- const hexField = document.getElementById(`hex${capitalize(tipo)}`); -->
+      <!-- if (cb && cb.checked) { -->
+        <!-- hexField.value = "transparent"; -->
+        <!-- color.disabled = true; -->
+        <!-- hexField.disabled = true; -->
+      <!-- } else { -->
+        <!-- color.disabled = false; -->
+        <!-- hexField.disabled = false; -->
+        <!-- hexField.value = color.value; -->
+      <!-- } -->
+    <!-- } -->
+    <!-- desenharFrame(0, tempoTotal); -->
+  <!-- } -->
 
-  function toggleContorno(tipo) {
-    const check = document.getElementById(`${tipo}ContornoAtivo`);
-    const grupo = document.getElementById(`grupo${capitalize(tipo)}Contorno`);
-    grupo.style.display = check.checked ? "block" : "none";
-    atualizarCampo(`${tipo}Contorno`);
-  }
+  <!-- function toggleContorno(tipo) { -->
+    <!-- const check = document.getElementById(`${tipo}ContornoAtivo`); -->
+    <!-- const grupo = document.getElementById(`grupo${capitalize(tipo)}Contorno`); -->
+    <!-- grupo.style.display = check.checked ? "block" : "none"; -->
+    <!-- atualizarCampo(`${tipo}Contorno`); -->
+  <!-- } -->
 
-  function toggleSombra() {
-    const check      = document.getElementById("sombraTransparente");
-    const grupoSombra = document.getElementById("grupoSombra");
-    const corSombra   = document.getElementById("corSombra");
-    const hexSombra   = document.getElementById("hexSombra");
+  <!-- function toggleSombra() { -->
+    <!-- const check      = document.getElementById("sombraTransparente"); -->
+    <!-- const grupoSombra = document.getElementById("grupoSombra"); -->
+    <!-- const corSombra   = document.getElementById("corSombra"); -->
+    <!-- const hexSombra   = document.getElementById("hexSombra"); -->
 
-    if (check.checked) {
-      sombraAnterior = corSombra.value;
-      grupoSombra.style.display = "none";
-      hexSombra.value = "transparent";
-      corSombra.disabled = true;
-      hexSombra.disabled = true;
-    } else {
-      grupoSombra.style.display = "block";
-      corSombra.disabled = false;
-      hexSombra.disabled = false;
-      if (hexSombra.value === "transparent") {
-        corSombra.value = sombraAnterior;
-        hexSombra.value = sombraAnterior;
-      }
-    }
-    desenharFrame(0, tempoTotal);
-  }
+    <!-- if (check.checked) { -->
+      <!-- sombraAnterior = corSombra.value; -->
+      <!-- grupoSombra.style.display = "none"; -->
+      <!-- hexSombra.value = "transparent"; -->
+      <!-- corSombra.disabled = true; -->
+      <!-- hexSombra.disabled = true; -->
+    <!-- } else { -->
+      <!-- grupoSombra.style.display = "block"; -->
+      <!-- corSombra.disabled = false; -->
+      <!-- hexSombra.disabled = false; -->
+      <!-- if (hexSombra.value === "transparent") { -->
+        <!-- corSombra.value = sombraAnterior; -->
+        <!-- hexSombra.value = sombraAnterior; -->
+      <!-- } -->
+    <!-- } -->
+    <!-- desenharFrame(0, tempoTotal); -->
+  <!-- } -->
 
-  ["Circulo", "Borda", "Texto", "Fundo", "Sombra", "TextoContorno"].forEach(tipo => {
-    document.getElementById(`cor${tipo}`).addEventListener("input", e => {
-      document.getElementById(`hex${tipo}`).value = e.target.value;
-      desenharFrame(0, tempoTotal);
-    });
-    document.getElementById(`hex${tipo}`).addEventListener("input", e => {
-      document.getElementById(`cor${tipo}`).value = e.target.value;
-      desenharFrame(0, tempoTotal);
-    });
-  });
+  <!-- ["Circulo", "Borda", "Texto", "Fundo", "Sombra", "TextoContorno"].forEach(tipo => { -->
+    <!-- document.getElementById(`cor${tipo}`).addEventListener("input", e => { -->
+      <!-- document.getElementById(`hex${tipo}`).value = e.target.value; -->
+      <!-- desenharFrame(0, tempoTotal); -->
+    <!-- }); -->
+    <!-- document.getElementById(`hex${tipo}`).addEventListener("input", e => { -->
+      <!-- document.getElementById(`cor${tipo}`).value = e.target.value; -->
+      <!-- desenharFrame(0, tempoTotal); -->
+    <!-- }); -->
+  <!-- }); -->
 
-  /* ======== LISTENERS DE SLIDERS E SELECTS ======== */
-  const binds = [
-    ["tamanhoTexto", "displayTamanhoTexto"],
-    ["grossuraBordaContorno", "displayGrossuraBordaContorno"],
-    ["grossuraCirculoContorno", "displayGrossuraCirculoContorno"],
-    ["grossuraTextoContorno", "displayGrossuraTextoContorno"],
-    ["grossuraFundoContorno", "displayGrossuraFundoContorno"],
-    ["grossuraCirculo", "displayGrossuraCirculo"],
-    ["grossuraBorda", "displayGrossuraBorda"]
-  ];
-  binds.forEach(([input, span]) => {
-    document.getElementById(input).addEventListener("input", e => {
-      document.getElementById(span).textContent = e.target.value;
-      desenharFrame(0, tempoTotal);
-    });
-  });
+  <!-- /* ======== LISTENERS DE SLIDERS E SELECTS ======== */ -->
+  <!-- const binds = [ -->
+    <!-- ["tamanhoTexto", "displayTamanhoTexto"], -->
+    <!-- ["grossuraBordaContorno", "displayGrossuraBordaContorno"], -->
+    <!-- ["grossuraCirculoContorno", "displayGrossuraCirculoContorno"], -->
+    <!-- ["grossuraTextoContorno", "displayGrossuraTextoContorno"], -->
+    <!-- ["grossuraFundoContorno", "displayGrossuraFundoContorno"], -->
+    <!-- ["grossuraCirculo", "displayGrossuraCirculo"], -->
+    <!-- ["grossuraBorda", "displayGrossuraBorda"] -->
+  <!-- ]; -->
+  <!-- binds.forEach(([input, span]) => { -->
+    <!-- document.getElementById(input).addEventListener("input", e => { -->
+      <!-- document.getElementById(span).textContent = e.target.value; -->
+      <!-- desenharFrame(0, tempoTotal); -->
+    <!-- }); -->
+  <!-- }); -->
 
-  document.getElementById("sombra").addEventListener("input", () => desenharFrame(0, tempoTotal));
-  document.getElementById("sombraX").addEventListener("input", () => desenharFrame(0, tempoTotal));
-  document.getElementById("sombraY").addEventListener("input", () => desenharFrame(0, tempoTotal));
-  document.getElementById("tipoTraco").addEventListener("change", () => desenharFrame(0, tempoTotal));
+  <!-- document.getElementById("sombra").addEventListener("input", () => desenharFrame(0, tempoTotal)); -->
+  <!-- document.getElementById("sombraX").addEventListener("input", () => desenharFrame(0, tempoTotal)); -->
+  <!-- document.getElementById("sombraY").addEventListener("input", () => desenharFrame(0, tempoTotal)); -->
+  <!-- document.getElementById("tipoTraco").addEventListener("change", () => desenharFrame(0, tempoTotal)); -->
 
-  document.getElementById("initialTime").addEventListener("input", () => {
-    tempoTotal = parseInt(document.getElementById("initialTime").value) || 0;
-    desenharFrame(0, tempoTotal);
-  });
+  <!-- document.getElementById("initialTime").addEventListener("input", () => { -->
+    <!-- tempoTotal = parseInt(document.getElementById("initialTime").value) || 0; -->
+    <!-- desenharFrame(0, tempoTotal); -->
+  <!-- }); -->
 
-  /* ================= DESENHO ================= */
-  function desenharFrame(progresso, tempoRestante) {
-    const centro = 150, raio = 100;
-    const anguloInicio = -Math.PI / 2;
-    const anguloFim    = anguloInicio + progresso * 2 * Math.PI;
+  <!-- /* ================= DESENHO ================= */ -->
+  <!-- function desenharFrame(progresso, tempoRestante) { -->
+    <!-- const centro = 150, raio = 100; -->
+    <!-- const anguloInicio = -Math.PI / 2; -->
+    <!-- const anguloFim    = anguloInicio + progresso * 2 * Math.PI; -->
 
-    const corFundo   = hex("Fundo");
-    const corBorda   = hex("Borda");
-    const corCirculo = hex("Circulo");
-    const corTexto   = hex("Texto");
-    const corSombra  = hex("Sombra");
-    const tipoTraco  = document.getElementById("tipoTraco").value;
-    const sombra     = +document.getElementById("sombra").value;
-    const offsetX    = +document.getElementById("sombraX").value;
-    const offsetY    = +document.getElementById("sombraY").value;
-    const tamanhoTexto    = +document.getElementById("tamanhoTexto").value;
-    const grossuraCirculo = +document.getElementById("grossuraCirculo").value;
-    const grossuraBorda   = +document.getElementById("grossuraBorda").value;
+    <!-- const corFundo   = hex("Fundo"); -->
+    <!-- const corBorda   = hex("Borda"); -->
+    <!-- const corCirculo = hex("Circulo"); -->
+    <!-- const corTexto   = hex("Texto"); -->
+    <!-- const corSombra  = hex("Sombra"); -->
+    <!-- const tipoTraco  = document.getElementById("tipoTraco").value; -->
+    <!-- const sombra     = +document.getElementById("sombra").value; -->
+    <!-- const offsetX    = +document.getElementById("sombraX").value; -->
+    <!-- const offsetY    = +document.getElementById("sombraY").value; -->
+    <!-- const tamanhoTexto    = +document.getElementById("tamanhoTexto").value; -->
+    <!-- const grossuraCirculo = +document.getElementById("grossuraCirculo").value; -->
+    <!-- const grossuraBorda   = +document.getElementById("grossuraBorda").value; -->
 
-    // ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
-	ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);  // Limpa o canvas, garantindo que o fundo seja transparente
-
-
-	// Limpeza do canvas antes de começar a desenhar
-	ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);  // Limpa o canvas, garantindo que o fundo seja transparente
-
-	// Condição para desenhar o fundo (só se fundo não for transparente)
-	if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").checked) {
-	  ctx.fillStyle = corFundo;
-	  ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE); // Preenche o fundo com a cor escolhida
-	}
+    <!-- // ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE); -->
+	<!-- ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);  // Limpa o canvas, garantindo que o fundo seja transparente -->
 
 
-    // Contorno do fundo
-    if (document.getElementById("fundoContornoAtivo")?.checked) {
-      const cor      = document.getElementById("hexFundoContorno").value;
-      const grossura = +document.getElementById("grossuraFundoContorno").value;
-      const tipo     = document.getElementById("tipoFundoContorno").value;
-      ctx.beginPath();
-      ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
-      ctx.strokeStyle = cor;
-      ctx.lineWidth   = grossura;
-      ctx.strokeRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
-    }
+	<!-- // Limpeza do canvas antes de começar a desenhar -->
+	<!-- ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);  // Limpa o canvas, garantindo que o fundo seja transparente -->
 
-    // Borda
-    if (corBorda !== "transparent") {
-      ctx.beginPath();
-      ctx.setLineDash([]);
-      ctx.arc(centro, centro, raio, 0, 2 * Math.PI);
-      ctx.strokeStyle   = corBorda;
-      ctx.lineWidth     = grossuraBorda;
-      ctx.shadowBlur    = sombra;
-      ctx.shadowOffsetX = offsetX;
-      ctx.shadowOffsetY = offsetY;
-      ctx.shadowColor   = corSombra;
-      ctx.stroke();
-    }
+	<!-- // Condição para desenhar o fundo (só se fundo não for transparente) -->
+	<!-- if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").checked) { -->
+	  <!-- ctx.fillStyle = corFundo; -->
+	  <!-- ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE); // Preenche o fundo com a cor escolhida -->
+	<!-- } -->
 
-    // Contorno da borda
-    if (document.getElementById("bordaContornoAtivo")?.checked) {
-      const cor      = document.getElementById("hexBordaContorno").value;
-      const grossura = +document.getElementById("grossuraBordaContorno").value;
-      const tipo     = document.getElementById("tipoBordaContorno").value;
-      ctx.beginPath();
-      ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
-      ctx.arc(centro, centro, raio, 0, 2 * Math.PI);
-      ctx.strokeStyle = cor;
-      ctx.lineWidth   = grossura;
-      ctx.stroke();
-    }
 
-    // Círculo progressivo
-    if (corCirculo !== "transparent") {
-      ctx.beginPath();
-      ctx.setLineDash(tipoTraco === "dashed" ? [10,10] : tipoTraco === "dotted" ? [2,6] : []);
-      ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
-      ctx.strokeStyle   = corCirculo;
-      ctx.lineWidth     = grossuraCirculo;
-      ctx.shadowBlur    = sombra;
-      ctx.shadowOffsetX = offsetX;
-      ctx.shadowOffsetY = offsetY;
-      ctx.shadowColor   = corSombra;
-      ctx.stroke();
-    }
+    <!-- // Contorno do fundo -->
+    <!-- if (document.getElementById("fundoContornoAtivo")?.checked) { -->
+      <!-- const cor      = document.getElementById("hexFundoContorno").value; -->
+      <!-- const grossura = +document.getElementById("grossuraFundoContorno").value; -->
+      <!-- const tipo     = document.getElementById("tipoFundoContorno").value; -->
+      <!-- ctx.beginPath(); -->
+      <!-- ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []); -->
+      <!-- ctx.strokeStyle = cor; -->
+      <!-- ctx.lineWidth   = grossura; -->
+      <!-- ctx.strokeRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE); -->
+    <!-- } -->
 
-    // Contorno do círculo
-    if (document.getElementById("circuloContornoAtivo")?.checked) {
-      const cor      = document.getElementById("hexCirculoContorno").value;
-      const grossura = +document.getElementById("grossuraCirculoContorno").value;
-      const tipo     = document.getElementById("tipoCirculoContorno").value;
-      ctx.beginPath();
-      ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
-      ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
-      ctx.strokeStyle = cor;
-      ctx.lineWidth   = grossura;
-      ctx.stroke();
-    }
+    <!-- // Borda -->
+    <!-- if (corBorda !== "transparent") { -->
+      <!-- ctx.beginPath(); -->
+      <!-- ctx.setLineDash([]); -->
+      <!-- ctx.arc(centro, centro, raio, 0, 2 * Math.PI); -->
+      <!-- ctx.strokeStyle   = corBorda; -->
+      <!-- ctx.lineWidth     = grossuraBorda; -->
+      <!-- ctx.shadowBlur    = sombra; -->
+      <!-- ctx.shadowOffsetX = offsetX; -->
+      <!-- ctx.shadowOffsetY = offsetY; -->
+      <!-- ctx.shadowColor   = corSombra; -->
+      <!-- ctx.stroke(); -->
+    <!-- } -->
 
-    // Texto
-    ctx.fillStyle      = corTexto;
-    ctx.shadowBlur     = sombra;
-    ctx.shadowOffsetX  = offsetX;
-    ctx.shadowOffsetY  = offsetY;
-    ctx.shadowColor    = corSombra;
-    ctx.font           = `bold ${tamanhoTexto}px Arial`;
-    ctx.textAlign      = "center";
-    ctx.textBaseline   = "middle";
-    ctx.fillText(tempoRestante.toString(), centro, centro);
+    <!-- // Contorno da borda -->
+    <!-- if (document.getElementById("bordaContornoAtivo")?.checked) { -->
+      <!-- const cor      = document.getElementById("hexBordaContorno").value; -->
+      <!-- const grossura = +document.getElementById("grossuraBordaContorno").value; -->
+      <!-- const tipo     = document.getElementById("tipoBordaContorno").value; -->
+      <!-- ctx.beginPath(); -->
+      <!-- ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []); -->
+      <!-- ctx.arc(centro, centro, raio, 0, 2 * Math.PI); -->
+      <!-- ctx.strokeStyle = cor; -->
+      <!-- ctx.lineWidth   = grossura; -->
+      <!-- ctx.stroke(); -->
+    <!-- } -->
 
-    // Contorno do texto
-    if (document.getElementById("textoContornoAtivo")?.checked) {
-      const cor      = document.getElementById("hexTextoContorno").value;
-      const grossura = +document.getElementById("grossuraTextoContorno").value;
-      const tipo     = document.getElementById("tipoTextoContorno").value;
-      ctx.beginPath();
-      ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
-      ctx.strokeStyle = cor;
-      ctx.lineWidth   = grossura;
-      ctx.strokeText(tempoRestante.toString(), centro, centro);
-    }
-  }
+    <!-- // Círculo progressivo -->
+    <!-- if (corCirculo !== "transparent") { -->
+      <!-- ctx.beginPath(); -->
+      <!-- ctx.setLineDash(tipoTraco === "dashed" ? [10,10] : tipoTraco === "dotted" ? [2,6] : []); -->
+      <!-- ctx.arc(centro, centro, raio, anguloInicio, anguloFim); -->
+      <!-- ctx.strokeStyle   = corCirculo; -->
+      <!-- ctx.lineWidth     = grossuraCirculo; -->
+      <!-- ctx.shadowBlur    = sombra; -->
+      <!-- ctx.shadowOffsetX = offsetX; -->
+      <!-- ctx.shadowOffsetY = offsetY; -->
+      <!-- ctx.shadowColor   = corSombra; -->
+      <!-- ctx.stroke(); -->
+    <!-- } -->
 
-  /* ================== CONTAGEM ================== */
-  // Essa versão usa requestAnimationFrame para atualizar o canvas suavemente
-  // e só salva um frame a cada 250ms (4 FPS)
-  function iniciarContagem() {
-    desabilitarControles();
-    frames = [];
-    const tempoTotalSegundos = tempoTotal; // tempoTotal definido no início (em segundos)
-    status.textContent = "Contando...";
-    gifDownload.innerHTML = "<p>Contando...</p>";
+    <!-- // Contorno do círculo -->
+    <!-- if (document.getElementById("circuloContornoAtivo")?.checked) { -->
+      <!-- const cor      = document.getElementById("hexCirculoContorno").value; -->
+      <!-- const grossura = +document.getElementById("grossuraCirculoContorno").value; -->
+      <!-- const tipo     = document.getElementById("tipoCirculoContorno").value; -->
+      <!-- ctx.beginPath(); -->
+      <!-- ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []); -->
+      <!-- ctx.arc(centro, centro, raio, anguloInicio, anguloFim); -->
+      <!-- ctx.strokeStyle = cor; -->
+      <!-- ctx.lineWidth   = grossura; -->
+      <!-- ctx.stroke(); -->
+    <!-- } -->
 
-    let startTime = null;      // Hora de início da contagem
-    let lastFrameTime = 0;     // Último momento que salvamos um frame
+    <!-- // Texto -->
+    <!-- ctx.fillStyle      = corTexto; -->
+    <!-- ctx.shadowBlur     = sombra; -->
+    <!-- ctx.shadowOffsetX  = offsetX; -->
+    <!-- ctx.shadowOffsetY  = offsetY; -->
+    <!-- ctx.shadowColor    = corSombra; -->
+    <!-- ctx.font           = `bold ${tamanhoTexto}px Arial`; -->
+    <!-- ctx.textAlign      = "center"; -->
+    <!-- ctx.textBaseline   = "middle"; -->
+    <!-- ctx.fillText(tempoRestante.toString(), centro, centro); -->
 
-    function animationLoop(timestamp) {
-      if (!startTime) startTime = timestamp;           // Define o início no primeiro frame
-      const elapsed = (timestamp - startTime) / 1000;    // Tempo decorrido em segundos
-      let tempoRestante = tempoTotalSegundos - elapsed;  // Calcula o tempo restante
-      if (tempoRestante < 0) tempoRestante = 0;            // Evita valores negativos
-      const progresso = elapsed / tempoTotalSegundos;    // Progresso da contagem (0 a 1)
+    <!-- // Contorno do texto -->
+    <!-- if (document.getElementById("textoContornoAtivo")?.checked) { -->
+      <!-- const cor      = document.getElementById("hexTextoContorno").value; -->
+      <!-- const grossura = +document.getElementById("grossuraTextoContorno").value; -->
+      <!-- const tipo     = document.getElementById("tipoTextoContorno").value; -->
+      <!-- ctx.beginPath(); -->
+      <!-- ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []); -->
+      <!-- ctx.strokeStyle = cor; -->
+      <!-- ctx.lineWidth   = grossura; -->
+      <!-- ctx.strokeText(tempoRestante.toString(), centro, centro); -->
+    <!-- } -->
+  <!-- } -->
 
-      // Atualiza o canvas conforme o tempo decorrido
-      desenharFrame(progresso, Math.floor(tempoRestante));
+  <!-- /* ================== CONTAGEM ================== */ -->
+  <!-- // Essa versão usa requestAnimationFrame para atualizar o canvas suavemente -->
+  <!-- // e só salva um frame a cada 250ms (4 FPS) -->
+  <!-- function iniciarContagem() { -->
+    <!-- desabilitarControles(); -->
+    <!-- frames = []; -->
+    <!-- const tempoTotalSegundos = tempoTotal; // tempoTotal definido no início (em segundos) -->
+    <!-- status.textContent = "Contando..."; -->
+    <!-- gifDownload.innerHTML = "<p>Contando...</p>"; -->
+
+    <!-- let startTime = null;      // Hora de início da contagem -->
+    <!-- let lastFrameTime = 0;     // Último momento que salvamos um frame -->
+
+    <!-- function animationLoop(timestamp) { -->
+      <!-- if (!startTime) startTime = timestamp;           // Define o início no primeiro frame -->
+      <!-- const elapsed = (timestamp - startTime) / 1000;    // Tempo decorrido em segundos -->
+      <!-- let tempoRestante = tempoTotalSegundos - elapsed;  // Calcula o tempo restante -->
+      <!-- if (tempoRestante < 0) tempoRestante = 0;            // Evita valores negativos -->
+      <!-- const progresso = elapsed / tempoTotalSegundos;    // Progresso da contagem (0 a 1) -->
+
+      <!-- // Atualiza o canvas conforme o tempo decorrido -->
+      <!-- desenharFrame(progresso, Math.floor(tempoRestante)); -->
       
-      // Se passaram pelo menos 250ms desde o último frame salvo (4 FPS), salva um novo frame
-      if (timestamp - lastFrameTime >= 50) {
-        frames.push(canvas.toDataURL("image/png"));
-        lastFrameTime = timestamp;
-      }
+      <!-- // Se passaram pelo menos 250ms desde o último frame salvo (4 FPS), salva um novo frame -->
+      <!-- if (timestamp - lastFrameTime >= 50) { -->
+        <!-- frames.push(canvas.toDataURL("image/png")); -->
+        <!-- lastFrameTime = timestamp; -->
+      <!-- } -->
 
-      // Atualiza na tela o tempo restante para finalizar
-      gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
+      <!-- // Atualiza na tela o tempo restante para finalizar -->
+      <!-- gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`; -->
 
-      // Continua a animação se ainda houver tempo
-      if (elapsed < tempoTotalSegundos) {
-        requestAnimationFrame(animationLoop);
-      } else {
-        status.textContent = "Enviando para o servidor...";
-        gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
-        enviarParaServidor(frames);
-      }
-    }
+      <!-- // Continua a animação se ainda houver tempo -->
+      <!-- if (elapsed < tempoTotalSegundos) { -->
+        <!-- requestAnimationFrame(animationLoop); -->
+      <!-- } else { -->
+        <!-- status.textContent = "Enviando para o servidor..."; -->
+        <!-- gifDownload.innerHTML = "<p>Enviando para o servidor...</p>"; -->
+        <!-- enviarParaServidor(frames); -->
+      <!-- } -->
+    <!-- } -->
 
-    requestAnimationFrame(animationLoop);
-  }
+    <!-- requestAnimationFrame(animationLoop); -->
+  <!-- } -->
 
-  /* =============== ENVIO AO SERVIDOR =============== */
-  function enviarParaServidor(frames) {
-    fetch("/api/gerar-gif", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ frames })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.url) {
-          status.textContent = "GIF gerado com sucesso!";
-          // Exibe a mensagem com o tempo estimado que o servidor levou para gerar o GIF
-          gifDownload.innerHTML = `GIF pronto em ${Math.floor(data.estimatedTime / 1000)} segundos: <a href="${data.url}" target="_blank">Baixar</a>`;
-        } else {
-          status.textContent = "Erro ao gerar GIF.";
-          gifDownload.innerHTML = "<p>Erro ao gerar GIF.</p>";
-        }
-        habilitarControles();
-      })
-      .catch(() => {
-        status.textContent = "Erro na comunicação com o servidor.";
-        gifDownload.innerHTML = "<p>Erro na comunicação com o servidor.</p>";
-        habilitarControles();
-      });
-  }
+  <!-- /* =============== ENVIO AO SERVIDOR =============== */ -->
+  <!-- function enviarParaServidor(frames) { -->
+    <!-- fetch("/api/gerar-gif", { -->
+      <!-- method: "POST", -->
+      <!-- headers: { "Content-Type": "application/json" }, -->
+      <!-- body: JSON.stringify({ frames }) -->
+    <!-- }) -->
+      <!-- .then(res => res.json()) -->
+      <!-- .then(data => { -->
+        <!-- if (data.url) { -->
+          <!-- status.textContent = "GIF gerado com sucesso!"; -->
+          <!-- // Exibe a mensagem com o tempo estimado que o servidor levou para gerar o GIF -->
+          <!-- gifDownload.innerHTML = `GIF pronto em ${Math.floor(data.estimatedTime / 1000)} segundos: <a href="${data.url}" target="_blank">Baixar</a>`; -->
+        <!-- } else { -->
+          <!-- status.textContent = "Erro ao gerar GIF."; -->
+          <!-- gifDownload.innerHTML = "<p>Erro ao gerar GIF.</p>"; -->
+        <!-- } -->
+        <!-- habilitarControles(); -->
+      <!-- }) -->
+      <!-- .catch(() => { -->
+        <!-- status.textContent = "Erro na comunicação com o servidor."; -->
+        <!-- gifDownload.innerHTML = "<p>Erro na comunicação com o servidor.</p>"; -->
+        <!-- habilitarControles(); -->
+      <!-- }); -->
+  <!-- } -->
 
   /* ================ RESETAR PADRÕES ================ */
   function resetarPadroes() {
@@ -792,59 +795,231 @@
     document.getElementById("tipoBordaContorno").value = "solid";
 
     // TEXTO
-    document.getElementById("corTexto").value = "#ffffff";
-    document.getElementById("hexTexto").value = "#ffffff";
-    document.getElementById("tamanhoTexto").value = 90;
-    document.getElementById("displayTamanhoTexto").textContent = 90;
-    document.getElementById("textoContornoAtivo").checked = false;
-    document.getElementById("grupoTextoContorno").style.display = "none";
-    document.getElementById("corTextoContorno").value = "#000000";
-    document.getElementById("hexTextoContorno").value = "#000000";
-    document.getElementById("grossuraTextoContorno").value = 2;
-    document.getElementById("displayGrossuraTextoContorno").textContent = 2;
-    document.getElementById("tipoTextoContorno").value = "solid";
+    <!-- document.getElementById("corTexto").value = "#ffffff"; -->
+    <!-- document.getElementById("hexTexto").value = "#ffffff"; -->
+    <!-- document.getElementById("tamanhoTexto").value = 90; -->
+    <!-- document.getElementById("displayTamanhoTexto").textContent = 90; -->
+    <!-- document.getElementById("textoContornoAtivo").checked = false; -->
+    <!-- document.getElementById("grupoTextoContorno").style.display = "none"; -->
+    <!-- document.getElementById("corTextoContorno").value = "#000000"; -->
+    <!-- document.getElementById("hexTextoContorno").value = "#000000"; -->
+    <!-- document.getElementById("grossuraTextoContorno").value = 2; -->
+    <!-- document.getElementById("displayGrossuraTextoContorno").textContent = 2; -->
+    <!-- document.getElementById("tipoTextoContorno").value = "solid"; -->
 
-    // FUNDO
-    document.getElementById("fundoTransparente").checked = true;
-    document.getElementById("corFundo").value = "#000000";
-    document.getElementById("hexFundo").value = "transparent";
-    document.getElementById("corFundo").disabled = true;
-    document.getElementById("hexFundo").disabled = true;
-    document.getElementById("fundoContornoAtivo").checked = false;
-    document.getElementById("grupoFundoContorno").style.display = "none";
-    document.getElementById("corFundoContorno").value = "#000000";
-    document.getElementById("hexFundoContorno").value = "#000000";
-    document.getElementById("grossuraFundoContorno").value = 2;
-    document.getElementById("displayGrossuraFundoContorno").textContent = 2;
-    document.getElementById("tipoFundoContorno").value = "solid";
+    <!-- // FUNDO -->
+    <!-- document.getElementById("fundoTransparente").checked = true; -->
+    <!-- document.getElementById("corFundo").value = "#000000"; -->
+    <!-- document.getElementById("hexFundo").value = "transparent"; -->
+    <!-- document.getElementById("corFundo").disabled = true; -->
+    <!-- document.getElementById("hexFundo").disabled = true; -->
+    <!-- document.getElementById("fundoContornoAtivo").checked = false; -->
+    <!-- document.getElementById("grupoFundoContorno").style.display = "none"; -->
+    <!-- document.getElementById("corFundoContorno").value = "#000000"; -->
+    <!-- document.getElementById("hexFundoContorno").value = "#000000"; -->
+    <!-- document.getElementById("grossuraFundoContorno").value = 2; -->
+    <!-- document.getElementById("displayGrossuraFundoContorno").textContent = 2; -->
+    <!-- document.getElementById("tipoFundoContorno").value = "solid"; -->
 
-    // SOMBRA
-    document.getElementById("sombraTransparente").checked = false;
-    document.getElementById("corSombra").value = "#000000";
-    document.getElementById("hexSombra").value = "#000000";
-    document.getElementById("corSombra").disabled = false;
-    document.getElementById("hexSombra").disabled = false;
-    document.getElementById("grupoSombra").style.display = "block";
-    document.getElementById("sombra").value = 8;
-    document.getElementById("sombraX").value = 4;
-    document.getElementById("sombraY").value = 4;
-    sombraAnterior = "#000000";
+    <!-- // SOMBRA -->
+    <!-- document.getElementById("sombraTransparente").checked = false; -->
+    <!-- document.getElementById("corSombra").value = "#000000"; -->
+    <!-- document.getElementById("hexSombra").value = "#000000"; -->
+    <!-- document.getElementById("corSombra").disabled = false; -->
+    <!-- document.getElementById("hexSombra").disabled = false; -->
+    <!-- document.getElementById("grupoSombra").style.display = "block"; -->
+    <!-- document.getElementById("sombra").value = 8; -->
+    <!-- document.getElementById("sombraX").value = 4; -->
+    <!-- document.getElementById("sombraY").value = 4; -->
+    <!-- sombraAnterior = "#000000"; -->
 
-    // TRAÇADO
-    document.getElementById("tipoTraco").value = "solid";
+    <!-- // TRAÇADO -->
+    <!-- document.getElementById("tipoTraco").value = "solid"; -->
 
-    // Redesenha preview
+    <!-- // Redesenha preview -->
+    <!-- desenharFrame(0, tempoTotal); -->
+  <!-- } -->
+
+  <!-- /* ============== INICIALIZAÇÃO ============== */ -->
+  <!-- document.addEventListener("DOMContentLoaded", () => { -->
+    <!-- tempoTotal = +document.getElementById("initialTime").value || 30; -->
+    <!-- ["circulo", "borda", "texto", "fundo"].forEach(toggleContorno); -->
+    <!-- toggleSombra(); -->
+    <!-- desenharFrame(0, tempoTotal); -->
+  <!-- }); -->
+  <!-- </script> -->
+
+<script>
+  /* ====== SETUP DO CANVAS COM ALTA DENSIDADE ====== */
+  const LOGICAL_SIZE = 300; // Tamanho "visível"
+  const scale = window.devicePixelRatio || 25; // Se não tiver devicePixelRatio, assume 25
+
+  const canvas = document.getElementById("canvas");
+  canvas.width  = LOGICAL_SIZE * scale;
+  canvas.height = LOGICAL_SIZE * scale;
+  canvas.style.width  = LOGICAL_SIZE + "px";  // Continua 300x300 na página
+  canvas.style.height = LOGICAL_SIZE + "px";
+
+  const ctx = canvas.getContext("2d");
+  ctx.scale(scale, scale); // Mantém as coordenadas lógicas
+
+  /* ================================================ */
+
+  const status      = document.getElementById("status");
+  const gifDownload = document.getElementById("gifDownload");
+  let frames = [];
+  let tempoTotal = parseInt(document.getElementById("initialTime").value) || 30;
+
+  /* ==================== UTILIDADES ==================== */
+  const hex = id => document.getElementById(`hex${id}`).value || "transparent";
+  const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+  /* ================= DESENHO ================= */
+  function desenharFrame(progresso, tempoRestante) {
+    const centro = 150, raio = 100;
+    const anguloInicio = -Math.PI / 2;
+    const anguloFim    = anguloInicio + progresso * 2 * Math.PI;
+
+    const corFundo   = hex("Fundo");
+    const corBorda   = hex("Borda");
+    const corCirculo = hex("Circulo");
+    const corTexto   = hex("Texto");
+    const corSombra  = hex("Sombra");
+    const tipoTraco  = document.getElementById("tipoTraco").value;
+    const sombra     = +document.getElementById("sombra").value;
+    const offsetX    = +document.getElementById("sombraX").value;
+    const offsetY    = +document.getElementById("sombraY").value;
+    const tamanhoTexto    = +document.getElementById("tamanhoTexto").value;
+    const grossuraCirculo = +document.getElementById("grossuraCirculo").value;
+    const grossuraBorda   = +document.getElementById("grossuraBorda").value;
+
+    // Limpa o canvas antes de desenhar para garantir fundo transparente
+    ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
+
+    // Desenha fundo, se não for transparente
+    if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").checked) {
+      ctx.fillStyle = corFundo;
+      ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
+    }
+
+    // Borda
+    if (corBorda !== "transparent") {
+      ctx.beginPath();
+      ctx.setLineDash([]);
+      ctx.arc(centro, centro, raio, 0, 2 * Math.PI);
+      ctx.strokeStyle   = corBorda;
+      ctx.lineWidth     = grossuraBorda;
+      ctx.shadowBlur    = sombra;
+      ctx.shadowOffsetX = offsetX;
+      ctx.shadowOffsetY = offsetY;
+      ctx.shadowColor   = corSombra;
+      ctx.stroke();
+    }
+
+    // Círculo progressivo
+    if (corCirculo !== "transparent") {
+      ctx.beginPath();
+      ctx.setLineDash(tipoTraco === "dashed" ? [10,10] : tipoTraco === "dotted" ? [2,6] : []);
+      ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
+      ctx.strokeStyle   = corCirculo;
+      ctx.lineWidth     = grossuraCirculo;
+      ctx.shadowBlur    = sombra;
+      ctx.shadowOffsetX = offsetX;
+      ctx.shadowOffsetY = offsetY;
+      ctx.shadowColor   = corSombra;
+      ctx.stroke();
+    }
+
+    // Texto
+    ctx.fillStyle      = corTexto;
+    ctx.shadowBlur     = sombra;
+    ctx.shadowOffsetX  = offsetX;
+    ctx.shadowOffsetY  = offsetY;
+    ctx.shadowColor    = corSombra;
+    ctx.font           = `bold ${tamanhoTexto}px Arial`;
+    ctx.textAlign      = "center";
+    ctx.textBaseline   = "middle";
+    ctx.fillText(tempoRestante.toString(), centro, centro);
+  }
+
+  /* ================== CONTAGEM ================== */
+  function iniciarContagem() {
+    desabilitarControles();
+    frames = [];
+    const tempoTotalSegundos = tempoTotal;
+    status.textContent = "Contando...";
+    gifDownload.innerHTML = "<p>Contando...</p>";
+
+    let startTime = null;
+    let lastFrameTime = 0;
+
+    function animationLoop(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const elapsed = (timestamp - startTime) / 1000;
+      let tempoRestante = tempoTotalSegundos - elapsed;
+      if (tempoRestante < 0) tempoRestante = 0;
+      const progresso = elapsed / tempoTotalSegundos;
+
+      desenharFrame(progresso, Math.floor(tempoRestante));
+
+      if (timestamp - lastFrameTime >= 50) {
+        frames.push(canvas.toDataURL("image/png"));
+        lastFrameTime = timestamp;
+      }
+
+      gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
+
+      if (elapsed < tempoTotalSegundos) {
+        requestAnimationFrame(animationLoop);
+      } else {
+        status.textContent = "Enviando para o servidor...";
+        gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
+        enviarParaServidor(frames);
+      }
+    }
+
+    requestAnimationFrame(animationLoop);
+  }
+
+  /* =============== ENVIO AO SERVIDOR =============== */
+  function enviarParaServidor(frames) {
+    fetch("/api/gerar-gif", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ frames })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.url) {
+          status.textContent = "GIF gerado com sucesso!";
+          gifDownload.innerHTML = `GIF pronto em ${Math.floor(data.estimatedTime / 1000)} segundos: <a href="${data.url}" target="_blank">Baixar</a>`;
+        } else {
+          status.textContent = "Erro ao gerar GIF.";
+          gifDownload.innerHTML = "<p>Erro ao gerar GIF.</p>";
+        }
+        habilitarControles();
+      })
+      .catch(() => {
+        status.textContent = "Erro na comunicação com o servidor.";
+        gifDownload.innerHTML = "<p>Erro na comunicação com o servidor.</p>";
+        habilitarControles();
+      });
+  }
+
+  /* ================ RESETAR PADRÕES ================ */
+  function resetarPadroes() {
     desenharFrame(0, tempoTotal);
   }
 
   /* ============== INICIALIZAÇÃO ============== */
   document.addEventListener("DOMContentLoaded", () => {
     tempoTotal = +document.getElementById("initialTime").value || 30;
-    ["circulo", "borda", "texto", "fundo"].forEach(toggleContorno);
-    toggleSombra();
     desenharFrame(0, tempoTotal);
   });
-  </script>
+</script>
+
+
+
 
 </body>
 </html>
