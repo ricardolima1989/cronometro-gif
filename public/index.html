@@ -590,7 +590,11 @@
 	console.log('Cor do fundo:', corFundo);
 	console.log('Fundo transparente ativado:', document.getElementById("fundoTransparente").checked);
 
-	// Só desenha o fundo se a cor não for transparente
+	// Limpa o canvas para garantir fundo transparente
+	console.log('Limpando canvas...');
+	ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);  // Limpa o canvas
+
+	// Só desenha o fundo se a cor não for transparente e se o fundo não for transparente
 	if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").checked) {
 		console.log('Desenhando fundo com a cor:', corFundo);
 		ctx.fillStyle = corFundo;
@@ -598,6 +602,7 @@
 	} else {
 		console.log('Fundo não será desenhado (fundo transparente ou fundo desativado).');
 	}
+
 
 
     // Contorno do fundo
