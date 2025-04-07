@@ -582,13 +582,16 @@
     const grossuraCirculo = +document.getElementById("grossuraCirculo").value;
     const grossuraBorda   = +document.getElementById("grossuraBorda").value;
 
-    ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
+    // ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
+	ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);  // Limpa o canvas, garantindo que o fundo seja transparente
+
 
     // Fundo
-    if (corFundo !== "transparent") {
-      ctx.fillStyle = corFundo;
-      ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
-    }
+// Fundo
+if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").checked) {
+  ctx.fillStyle = corFundo;
+  ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
+}
 
     // Contorno do fundo
     if (document.getElementById("fundoContornoAtivo")?.checked) {
