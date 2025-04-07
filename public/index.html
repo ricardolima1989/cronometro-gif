@@ -866,9 +866,14 @@ document.getElementById("progressBar").style.width = "0%";
 
 status.textContent = "Enviando para o servidor...";
 gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
-document.getElementById("progressBarContainer").style.display = "block";
+const barContainer = document.getElementById("progressBarContainer");
+const bar = document.getElementById("progressBar");
+barContainer.style.display = "block";
+bar.style.width = "0%";
 animarBarraProgresso(() => {
   enviarParaServidor(frames);
+});
+
 });
 
 
@@ -880,12 +885,10 @@ function animarBarraProgresso(callback) {
     bar.style.width = `${progresso}%`;
     if (progresso >= 100) {
       clearInterval(intervalo);
-      callback(); // Chama função após barra completar
+      callback(); // Executa o envio após 5s
     }
-  }, 50); // 50ms * 100 = 5s
+  }, 50); // 100 etapas x 50ms = 5 segundos
 }
-
-
 
 </script>
 
