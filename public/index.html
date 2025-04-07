@@ -430,7 +430,181 @@
         </div>
       </div>
     </div>
+  
   </div>
+  
+  
+  
+  <script>
+  /* ====== SETUP DO CANVAS COM ALTA DENSIDADE ====== */
+  const LOGICAL_SIZE = 300; 
+  const scale = window.devicePixelRatio || 25; 
+
+  const canvas = document.getElementById("canvas");
+  canvas.width  = LOGICAL_SIZE * scale;
+  canvas.height = LOGICAL_SIZE * scale;
+  canvas.style.width  = LOGICAL_SIZE + "px";  
+  canvas.style.height = LOGICAL_SIZE + "px";
+
+  const ctx = canvas.getContext("2d");
+  ctx.scale(scale, scale); 
+
+  const status      = document.getElementById("status");
+  const gifDownload = document.getElementById("gifDownload");
+  let frames = [];
+  let tempoTotal = parseInt(document.getElementById("initialTime").value) || 30;
+
+  /* ==================== UTILIDADES ==================== */
+  const hex = id => document.getElementById(`hex${id}`).value || "transparent";
+  const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+  /* ================= DESENHO ================= */
+  function desenharFrame(progresso, tempoRestante) {
+    const centro = 150, raio = 100;
+    const anguloInicio = -Math.PI / 2;
+    const anguloFim    = anguloInicio + progresso * 2 * Math.PI;
+
+    const corFundo   = hex("Fundo");
+    const corBorda   = hex("Borda");
+    const corCirculo = hex("Circulo");
+    const corTexto   = hex("Texto");
+    const corSombra  = hex("Sombra");
+    const tipoTraco  = document.getElementById("tipoTraco").value;
+    const sombra     = +document.getElementById("sombra").value;
+    const offsetX    = +document.getElementById("sombraX").value;
+    const offsetY    = +document.getElementById("sombraY").value;
+    const tamanhoTexto    = +document.getElementById("tamanhoTexto").value;
+    const grossuraCirculo = +document.getElementById("grossuraCirculo").value;
+    const grossuraBorda   = +document.getElementById("grossuraBorda").value;
+
+    // Limpa o canvas antes de desenhar
+    ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
+
+    // Desenha fundo, se não for transparente
+    if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").checked) {
+      ctx.fillStyle = corFundo;
+      ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
+    }
+
+    // Borda
+    if (corBorda !== "transparent") {
+      ctx.beginPath();
+      ctx.setLineDash([]);
+      ctx.arc(centro, centro, raio, 0, 2 * Math.PI);
+      ctx.strokeStyle   = corBorda;
+      ctx.lineWidth     = grossuraBorda;
+      ctx.shadowBlur    = sombra;
+      ctx.shadowOffsetX = offsetX;
+      ctx.shadowOffsetY = offsetY;
+      ctx.shadowColor   = corSombra;
+      ctx.stroke();
+    }
+
+    // Círculo progressivo
+    if (corCirculo !== "transparent") {
+      ctx.beginPath();
+      ctx.setLineDash(tipoTraco === "dashed" ? [10,10] : tipoTraco === "dotted" ? [2,6] : []);
+      ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
+      ctx.strokeStyle   = corCirculo;
+      ctx.lineWidth     = grossuraCirculo;
+      ctx.shadowBlur    = sombra;
+      ctx.shadowOffsetX = offsetX;
+      ctx.shadowOffsetY = offsetY;
+      ctx.shadowColor   = corSombra;
+      ctx.stroke();
+    }
+
+    // Texto
+    ctx.fillStyle      = corTexto;
+    ctx.shadowBlur     = sombra;
+    ctx.shadowOffsetX  = offsetX;
+    ctx.shadowOffsetY  = offsetY;
+    ctx.shadowColor    = corSombra;
+    ctx.font           = `bold ${tamanhoTexto}px Arial`;
+    ctx.textAlign      = "center";
+    ctx.textBaseline   = "middle";
+    ctx.fillText(tempoRestante.toString(), centro, centro);
+  }
+
+  /* ================== CONTAGEM ================== */
+  function iniciarContagem() {
+    // Habilitar o botão antes de iniciar a contagem
+    document.querySelector("button").disabled = true;
+    frames = [];
+    const tempoTotalSegundos = tempoTotal;
+    status.textContent = "Contando...";
+    gifDownload.innerHTML = "<p>Contando...</p>";
+
+    let startTime = null;
+    let lastFrameTime = 0;
+
+    function animationLoop(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const elapsed = (timestamp - startTime) / 1000;
+      let tempoRestante = tempoTotalSegundos - elapsed;
+      if (tempoRestante < 0) tempoRestante = 0;
+      const progresso = elapsed / tempoTotalSegundos;
+
+      desenharFrame(progresso, Math.floor(tempoRestante));
+
+      if (timestamp - lastFrameTime >= 50) {
+        frames.push(canvas.toDataURL("image/png"));
+        lastFrameTime = timestamp;
+      }
+
+      gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
+
+      if (elapsed < tempoTotalSegundos) {
+        requestAnimationFrame(animationLoop);
+      } else {
+        status.textContent = "Enviando para o servidor...";
+        gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
+        enviarParaServidor(frames);
+      }
+    }
+
+    requestAnimationFrame(animationLoop);
+  }
+
+  /* =============== ENVIO AO SERVIDOR =============== */
+  function enviarParaServidor(frames) {
+    fetch("/api/gerar-gif", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ frames })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.url) {
+          status.textContent = "GIF gerado com sucesso!";
+          gifDownload.innerHTML = `GIF pronto em ${Math.floor(data.estimatedTime / 1000)} segundos: <a href="${data.url}" target="_blank">Baixar</a>`;
+        } else {
+          status.textContent = "Erro ao gerar GIF.";
+          gifDownload.innerHTML = "<p>Erro ao gerar GIF.</p>";
+        }
+        document.querySelector("button").disabled = false; // Reabilitar o botão
+      })
+      .catch(() => {
+        status.textContent = "Erro na comunicação com o servidor.";
+        gifDownload.innerHTML = "<p>Erro na comunicação com o servidor.</p>";
+        document.querySelector("button").disabled = false; // Reabilitar o botão
+      });
+  }
+
+  /* ================ RESETAR PADRÕES ================ */
+  function resetarPadroes() {
+    desenharFrame(0, tempoTotal);
+  }
+
+  /* ============== INICIALIZAÇÃO ============== */
+  document.addEventListener("DOMContentLoaded", () => {
+    tempoTotal = +document.getElementById("initialTime").value || 30;
+    desenharFrame(0, tempoTotal);
+  });
+</script>
+
+  
+  
   
   
   <!-- <script> -->
@@ -846,175 +1020,6 @@
     <!-- desenharFrame(0, tempoTotal); -->
   <!-- }); -->
   <!-- </script> -->
-
-<script>
-  /* ====== SETUP DO CANVAS COM ALTA DENSIDADE ====== */
-  const LOGICAL_SIZE = 300; // Tamanho "visível"
-  const scale = window.devicePixelRatio || 25; // Se não tiver devicePixelRatio, assume 25
-
-  const canvas = document.getElementById("canvas");
-  canvas.width  = LOGICAL_SIZE * scale;
-  canvas.height = LOGICAL_SIZE * scale;
-  canvas.style.width  = LOGICAL_SIZE + "px";  // Continua 300x300 na página
-  canvas.style.height = LOGICAL_SIZE + "px";
-
-  const ctx = canvas.getContext("2d");
-  ctx.scale(scale, scale); // Mantém as coordenadas lógicas
-
-  /* ================================================ */
-
-  const status      = document.getElementById("status");
-  const gifDownload = document.getElementById("gifDownload");
-  let frames = [];
-  let tempoTotal = parseInt(document.getElementById("initialTime").value) || 30;
-
-  /* ==================== UTILIDADES ==================== */
-  const hex = id => document.getElementById(`hex${id}`).value || "transparent";
-  const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
-
-  /* ================= DESENHO ================= */
-  function desenharFrame(progresso, tempoRestante) {
-    const centro = 150, raio = 100;
-    const anguloInicio = -Math.PI / 2;
-    const anguloFim    = anguloInicio + progresso * 2 * Math.PI;
-
-    const corFundo   = hex("Fundo");
-    const corBorda   = hex("Borda");
-    const corCirculo = hex("Circulo");
-    const corTexto   = hex("Texto");
-    const corSombra  = hex("Sombra");
-    const tipoTraco  = document.getElementById("tipoTraco").value;
-    const sombra     = +document.getElementById("sombra").value;
-    const offsetX    = +document.getElementById("sombraX").value;
-    const offsetY    = +document.getElementById("sombraY").value;
-    const tamanhoTexto    = +document.getElementById("tamanhoTexto").value;
-    const grossuraCirculo = +document.getElementById("grossuraCirculo").value;
-    const grossuraBorda   = +document.getElementById("grossuraBorda").value;
-
-    // Limpa o canvas antes de desenhar para garantir fundo transparente
-    ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
-
-    // Desenha fundo, se não for transparente
-    if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").checked) {
-      ctx.fillStyle = corFundo;
-      ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
-    }
-
-    // Borda
-    if (corBorda !== "transparent") {
-      ctx.beginPath();
-      ctx.setLineDash([]);
-      ctx.arc(centro, centro, raio, 0, 2 * Math.PI);
-      ctx.strokeStyle   = corBorda;
-      ctx.lineWidth     = grossuraBorda;
-      ctx.shadowBlur    = sombra;
-      ctx.shadowOffsetX = offsetX;
-      ctx.shadowOffsetY = offsetY;
-      ctx.shadowColor   = corSombra;
-      ctx.stroke();
-    }
-
-    // Círculo progressivo
-    if (corCirculo !== "transparent") {
-      ctx.beginPath();
-      ctx.setLineDash(tipoTraco === "dashed" ? [10,10] : tipoTraco === "dotted" ? [2,6] : []);
-      ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
-      ctx.strokeStyle   = corCirculo;
-      ctx.lineWidth     = grossuraCirculo;
-      ctx.shadowBlur    = sombra;
-      ctx.shadowOffsetX = offsetX;
-      ctx.shadowOffsetY = offsetY;
-      ctx.shadowColor   = corSombra;
-      ctx.stroke();
-    }
-
-    // Texto
-    ctx.fillStyle      = corTexto;
-    ctx.shadowBlur     = sombra;
-    ctx.shadowOffsetX  = offsetX;
-    ctx.shadowOffsetY  = offsetY;
-    ctx.shadowColor    = corSombra;
-    ctx.font           = `bold ${tamanhoTexto}px Arial`;
-    ctx.textAlign      = "center";
-    ctx.textBaseline   = "middle";
-    ctx.fillText(tempoRestante.toString(), centro, centro);
-  }
-
-  /* ================== CONTAGEM ================== */
-  function iniciarContagem() {
-    desabilitarControles();
-    frames = [];
-    const tempoTotalSegundos = tempoTotal;
-    status.textContent = "Contando...";
-    gifDownload.innerHTML = "<p>Contando...</p>";
-
-    let startTime = null;
-    let lastFrameTime = 0;
-
-    function animationLoop(timestamp) {
-      if (!startTime) startTime = timestamp;
-      const elapsed = (timestamp - startTime) / 1000;
-      let tempoRestante = tempoTotalSegundos - elapsed;
-      if (tempoRestante < 0) tempoRestante = 0;
-      const progresso = elapsed / tempoTotalSegundos;
-
-      desenharFrame(progresso, Math.floor(tempoRestante));
-
-      if (timestamp - lastFrameTime >= 50) {
-        frames.push(canvas.toDataURL("image/png"));
-        lastFrameTime = timestamp;
-      }
-
-      gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
-
-      if (elapsed < tempoTotalSegundos) {
-        requestAnimationFrame(animationLoop);
-      } else {
-        status.textContent = "Enviando para o servidor...";
-        gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
-        enviarParaServidor(frames);
-      }
-    }
-
-    requestAnimationFrame(animationLoop);
-  }
-
-  /* =============== ENVIO AO SERVIDOR =============== */
-  function enviarParaServidor(frames) {
-    fetch("/api/gerar-gif", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ frames })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.url) {
-          status.textContent = "GIF gerado com sucesso!";
-          gifDownload.innerHTML = `GIF pronto em ${Math.floor(data.estimatedTime / 1000)} segundos: <a href="${data.url}" target="_blank">Baixar</a>`;
-        } else {
-          status.textContent = "Erro ao gerar GIF.";
-          gifDownload.innerHTML = "<p>Erro ao gerar GIF.</p>";
-        }
-        habilitarControles();
-      })
-      .catch(() => {
-        status.textContent = "Erro na comunicação com o servidor.";
-        gifDownload.innerHTML = "<p>Erro na comunicação com o servidor.</p>";
-        habilitarControles();
-      });
-  }
-
-  /* ================ RESETAR PADRÕES ================ */
-  function resetarPadroes() {
-    desenharFrame(0, tempoTotal);
-  }
-
-  /* ============== INICIALIZAÇÃO ============== */
-  document.addEventListener("DOMContentLoaded", () => {
-    tempoTotal = +document.getElementById("initialTime").value || 30;
-    desenharFrame(0, tempoTotal);
-  });
-</script>
 
 
 
