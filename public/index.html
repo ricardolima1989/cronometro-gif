@@ -791,9 +791,7 @@ function iniciarContagem() {
   
   
   
-  
-
-function animationLoop(timestamp) {
+  function animationLoop(timestamp) {
   if (cancelRequested) {
     status.textContent = "Processo cancelado!";
     gifDownload.innerHTML = "<p>O processo foi cancelado.</p>";
@@ -844,6 +842,30 @@ function animationLoop(timestamp) {
   }
 }
 
+// Função para enviar para o servidor e liberar o link de download
+function enviarParaServidor(frames) {
+  // Simulando o retorno do servidor com um tempo de delay
+  setTimeout(() => {
+    // O servidor retornou com sucesso
+
+    // Exibe a mensagem de sucesso e o link de download
+    gifDownload.innerHTML = `
+      <p>GIF gerado com sucesso!</p>
+      <a href="caminho/para/seu/gif.gif" download="cronometro.gif" class="btn-download">Baixar GIF</a>
+    `;
+    
+    // Desabilitar a barra de progresso, já que o download está pronto
+    document.getElementById("progressWrapper").style.display = "none";
+    
+    // Liberar o botão para o usuário poder baixar
+    const downloadButton = document.querySelector(".btn-download");
+    downloadButton.style.display = "inline-block";
+  }, 2000); // Simula o delay de 2 segundos no retorno do servidor
+}
+
+  
+  
+  
   
   
   
