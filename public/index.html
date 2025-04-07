@@ -584,18 +584,16 @@
     const grossuraCirculo = +document.getElementById("grossuraCirculo").value;
     const grossuraBorda   = +document.getElementById("grossuraBorda").value;
 
-    // ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
-	ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);  // Limpa o canvas, garantindo que o fundo seja transparente
+// Limpeza do canvas antes de começar a desenhar
+ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);  // Limpa o canvas, garantindo que o fundo seja transparente
 
+// Condição para desenhar o fundo (só se fundo não for transparente)
+const corFundo = hex("Fundo");
+if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").checked) {
+  ctx.fillStyle = corFundo;  // Pega a cor escolhida para o fundo
+  ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);  // Preenche o fundo com a cor escolhida
+}
 
-	// Limpeza do canvas antes de começar a desenhar
-	ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);  // Limpa o canvas, garantindo que o fundo seja transparente
-
-	// Condição para desenhar o fundo (só se fundo não for transparente)
-	if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").checked) {
-	  ctx.fillStyle = corFundo;
-	  ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE); // Preenche o fundo com a cor escolhida
-	}
 
 
     // Contorno do fundo
