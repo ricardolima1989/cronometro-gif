@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const fs        = require('fs');
 const GIFEncoder = require('gifencoder');
 const { createCanvas, loadImage } = require('canvas');
-const { v4: uuidv4 } = require('uuid');  // Importa a função UUID
+const { v4: uuidv4 } = require('uuid');  // Importa a função para gerar UUID
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -23,13 +23,12 @@ app.post('/api/gerar-gif', async (req, res) => {
 
     /* --- pega a resolução real dos frames --- */
     const img0   = await loadImage(frames[0]);
-    const width  = img0.width;   // ex.: 1500
-    const height = img0.height;  // ex.: 1500
+    const width  = img0.width;
+    const height = img0.height;
 
     /* --- configura encoder no mesmo tamanho --- */
     const encoder   = new GIFEncoder(width, height);
-    // Gera um nome único utilizando UUID
-    const fileName  = `cronometro-${uuidv4()}.gif`;
+    const fileName  = `cronometro-${uuidv4()}.gif`; // Gera nome único com UUID
     const filePath  = `public/gif/${fileName}`;
     const outStream = fs.createWriteStream(filePath);
 
@@ -37,18 +36,18 @@ app.post('/api/gerar-gif', async (req, res) => {
     encoder.start();
     encoder.setRepeat(0);            // loop infinito
     const FPS = 4;                   // 4 frames por segundo
-    encoder.setDelay(1000 / FPS);      // Calcula o delay: 1000ms / 4 = 250ms por frame
+    encoder.setDelay(1000 / FPS);      // 1000/4 = 250ms por frame
     encoder.setQuality(5);           // 1‑30 (1 = melhor)
 
     /* --- canvas buffer --- */
     const canvas = createCanvas(width, height);
     const ctx    = canvas.getContext('2d');
 
-    /* primeiro frame já carregado */
+    // Primeiro frame já carregado
     ctx.drawImage(img0, 0, 0, width, height);
     encoder.addFrame(ctx);
 
-    /* demais frames */
+    // Demais frames
     for (let i = 1; i < frames.length; i++) {
       const img = await loadImage(frames[i]);
       ctx.clearRect(0, 0, width, height);

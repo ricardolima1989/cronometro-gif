@@ -21,11 +21,7 @@
       width: 100%;
       max-width: 1440px;
     }
-    .col {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+    .col { display: flex; flex-direction: column; gap: 10px; }
     .secao {
       background: #fff;
       border: 1px solid #ddd;
@@ -45,12 +41,7 @@
     .linha-color input[type="text"] {
       flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px;
     }
-    .linha-check {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
+    .linha-check { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
     select, input[type="range"], input[type="number"] {
       width: 100%; padding: 8px; font-size: 14px; border-radius: 6px; border: 1px solid #ccc;
     }
@@ -370,7 +361,7 @@
   <script>
     /* ====== SETUP DO CANVAS COM ALTA DENSIDADE ====== */
     const LOGICAL_SIZE = 300; // Tamanho "visível"
-    const scale = window.devicePixelRatio || 25; // Se não tiver devicePixelRatio, assume 25
+    const scale = window.devicePixelRatio || 25;
 
     const canvas = document.getElementById("canvas");
     canvas.width  = LOGICAL_SIZE * scale;
@@ -616,18 +607,17 @@
     }
 
     /* ================== CONTAGEM ================== */
-    // Essa versão usa requestAnimationFrame para atualizar o canvas suavemente
-    // e salva um frame a cada (1000 / FPS) milissegundos.
+    // Utiliza requestAnimationFrame e salva um frame a cada (1000 / FPS) milissegundos.
     function iniciarContagem() {
       desabilitarControles();
       frames = [];
-      const tempoTotalSegundos = tempoTotal; // tempoTotal definido (em segundos)
+      const tempoTotalSegundos = tempoTotal;
       status.textContent = "Contando...";
       gifDownload.innerHTML = "<p>Contando...</p>";
 
-      let startTime = null;      // Início da contagem
-      let lastFrameTime = 0;     // Último momento que salvamos um frame
-      const FPS = 4;             // Define FPS (4 frames por segundo)
+      let startTime = null;
+      let lastFrameTime = 0;
+      const FPS = 4; // 4 frames por segundo
 
       // Tempo estimado fixo para o processamento no servidor (ex.: 10 segundos)
       let estimatedServerTime = 10; // em segundos
@@ -635,8 +625,8 @@
       let countdownInterval = null;
 
       function animationLoop(timestamp) {
-        if (!startTime) startTime = timestamp; // Primeiro frame
-        const elapsed = (timestamp - startTime) / 1000; // Segundos decorrido
+        if (!startTime) startTime = timestamp;
+        const elapsed = (timestamp - startTime) / 1000;
         let tempoRestante = tempoTotalSegundos - elapsed;
         if (tempoRestante < 0) tempoRestante = 0;
         const progresso = elapsed / tempoTotalSegundos;
@@ -650,14 +640,14 @@
           lastFrameTime = timestamp;
         }
 
-        // Atualiza a área com o tempo estimado para finalização (durante a contagem)
+        // Atualiza na tela o tempo estimado para finalização durante a contagem
         gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
 
         if (elapsed < tempoTotalSegundos) {
           requestAnimationFrame(animationLoop);
         } else {
           status.textContent = "Enviando para o servidor...";
-          // Inicia uma contagem regressiva enquanto aguarda o servidor
+          // Inicia contagem regressiva enquanto aguarda a resposta
           countdownInterval = setInterval(() => {
             if (countdown > 0) {
               countdown--;
@@ -679,7 +669,7 @@
       })
         .then(res => res.json())
         .then(data => {
-          clearInterval(countdownInterval); // Cancela a contagem regressiva
+          clearInterval(countdownInterval);
           if (data.url) {
             status.textContent = "GIF gerado com sucesso!";
             gifDownload.innerHTML = `GIF pronto em ${Math.floor(data.estimatedTime / 1000)} segundos: <a href="${data.url}" target="_blank">Baixar</a>`;
@@ -701,7 +691,7 @@
     function resetarPadroes() {
       document.getElementById("initialTime").value = 30;
       tempoTotal = 30;
-      // Restauro dos demais valores padrão...
+      // Restauro dos valores padrão para cada controle...
       document.getElementById("circuloTransparente").checked = false;
       document.getElementById("corCirculo").value = "#4A90E2";
       document.getElementById("hexCirculo").value = "#4A90E2";
