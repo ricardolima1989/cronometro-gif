@@ -419,7 +419,7 @@
     <!-- Coluna 4: Pré-visualização e GIF final para download -->
     <div class="col preview">
       <div class="secao">
-        <canvas id="canvas" width="7500" height="7500"
+        <canvas id="canvas" width="500" height="500"
         style="width:300px;height:300px;"></canvas>
         <p style="margin-top: 12px;">Pré-visualização</p>
       </div>
@@ -437,7 +437,7 @@
   <script>
   /* ====== SETUP DO CANVAS COM ALTA DENSIDADE ====== */
   const LOGICAL_SIZE = 300;                   // Tamanho "visível"
-  const scale = window.devicePixelRatio || 25; // Se não tiver devicePixelRatio, assume 25
+  const scale = window.devicePixelRatio || 2; // Se não tiver devicePixelRatio, assume 25
 
   const canvas = document.getElementById("canvas");
   canvas.width  = LOGICAL_SIZE * scale;       // Ex.: 600 px se scale = 2
