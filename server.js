@@ -17,6 +17,9 @@ app.post('/api/gerar-gif', async (req, res) => {
     const frames = req.body.frames;
     if (!frames?.length) return res.status(400).json({ error: 'Nenhum frame recebido.' });
 
+    // Marca o tempo de início para medir quanto tempo a geração leva
+    const startTime = Date.now();
+
     /* --- pega a resolução real dos frames --- */
     const img0   = await loadImage(frames[0]);
     const width  = img0.width;   // ex.: 1500
@@ -30,9 +33,9 @@ app.post('/api/gerar-gif', async (req, res) => {
 
     encoder.createReadStream().pipe(outStream);
     encoder.start();
-    encoder.setRepeat(0);      // loop infinito
-    encoder.setDelay(1000 / 10);    // 1 fps
-    encoder.setQuality(5);     // 1‑30 (1 = melhor)
+    encoder.setRepeat(0);            // loop infinito
+    encoder.setDelay(1000 / 2);        // 500ms por frame (2 FPS)
+    encoder.setQuality(5);           // 1‑30 (1 = melhor)
 
     /* --- canvas buffer --- */
     const canvas = createCanvas(width, height);
@@ -52,7 +55,11 @@ app.post('/api/gerar-gif', async (req, res) => {
 
     encoder.finish();
 
-    outStream.on('finish', () => res.json({ url: `/gif/${fileName}` }));
+    // Quando a escrita do arquivo terminar, calcula o tempo gasto e envia a resposta
+    outStream.on('finish', () => {
+      const elapsed = Date.now() - startTime; // tempo gasto em milissegundos
+      res.json({ url: `/gif/${fileName}`, estimatedTime: elapsed });
+    });
 
   } catch (err) {
     console.error('Erro ao gerar GIF:', err);

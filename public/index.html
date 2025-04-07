@@ -436,6 +436,7 @@
   </div>
   
   
+
   <script>
   /* ====== SETUP DO CANVAS COM ALTA DENSIDADE ====== */
   const LOGICAL_SIZE = 300;                   // Tamanho "visível"
@@ -686,7 +687,7 @@
 
   /* ================== CONTAGEM ================== */
   // Essa versão usa requestAnimationFrame para atualizar o canvas suavemente
-  // e só salva um frame a cada 100ms (10 FPS)
+  // e só salva um frame a cada 500ms (2 FPS)
   function iniciarContagem() {
     desabilitarControles();
     frames = [];
@@ -706,12 +707,15 @@
 
       // Atualiza o canvas conforme o tempo decorrido
       desenharFrame(progresso, Math.floor(tempoRestante));
-
-      // Se passaram pelo menos 100ms desde o último frame salvo (10 FPS), salva um novo frame
-      if (timestamp - lastFrameTime >= 100) {
+      
+      // Se passaram pelo menos 500ms desde o último frame salvo (2 FPS), salva um novo frame
+      if (timestamp - lastFrameTime >= 500) {
         frames.push(canvas.toDataURL("image/png"));
         lastFrameTime = timestamp;
       }
+
+      // Atualiza na tela o tempo restante para finalizar
+      gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
 
       // Continua a animação se ainda houver tempo
       if (elapsed < tempoTotalSegundos) {
@@ -737,7 +741,8 @@
       .then(data => {
         if (data.url) {
           status.textContent = "GIF gerado com sucesso!";
-          gifDownload.innerHTML = `GIF pronto: <a href="${data.url}" target="_blank">Baixar</a>`;
+          // Exibe a mensagem com o tempo estimado que o servidor levou para gerar o GIF
+          gifDownload.innerHTML = `GIF pronto em ${Math.floor(data.estimatedTime / 1000)} segundos: <a href="${data.url}" target="_blank">Baixar</a>`;
         } else {
           status.textContent = "Erro ao gerar GIF.";
           gifDownload.innerHTML = "<p>Erro ao gerar GIF.</p>";
@@ -840,7 +845,6 @@
   });
 </script>
 
-  
   
   
   
