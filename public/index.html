@@ -584,17 +584,14 @@
     const grossuraCirculo = +document.getElementById("grossuraCirculo").value;
     const grossuraBorda   = +document.getElementById("grossuraBorda").value;
 
-// Limpeza do canvas antes de começar a desenhar
-ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);  // Limpa o canvas, garantindo que o fundo seja transparente
+    // Limpeza do canvas antes de começar a desenhar
+    ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);  // Limpa o canvas, garantindo que o fundo seja transparente
 
-// Condição para desenhar o fundo (só se fundo não for transparente)
-const corFundo = hex("Fundo");
-if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").checked) {
-  ctx.fillStyle = corFundo;  // Pega a cor escolhida para o fundo
-  ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);  // Preenche o fundo com a cor escolhida
-}
-
-
+    // Condição para desenhar o fundo (só se fundo não for transparente)
+    if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").checked) {
+      ctx.fillStyle = corFundo;
+      ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE); // Preenche o fundo com a cor escolhida
+    }
 
     // Contorno do fundo
     if (document.getElementById("fundoContornoAtivo")?.checked) {
@@ -715,7 +712,7 @@ if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").
         lastFrameTime = timestamp;
       }
 
-      // Atualiza na tela o tempo restante para finalizar
+      // Atualiza na tela o tempo restante para finalização
       gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
 
       // Continua a animação se ainda houver tempo
@@ -844,7 +841,8 @@ if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").
     toggleSombra();
     desenharFrame(0, tempoTotal);
   });
-  </script>
+</script>
+
 
 
 
