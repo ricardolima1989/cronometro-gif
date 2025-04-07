@@ -28,7 +28,7 @@ app.post('/api/gerar-gif', async (req, res) => {
     /* --- configura encoder no mesmo tamanho --- */
     const encoder   = new GIFEncoder(width, height);
     const fileName  = `cronometro-${Date.now()}.gif`;
-    const filePath  = public/gif/${fileName};
+    const filePath  = `public/gif/${fileName}`;
     const outStream = fs.createWriteStream(filePath);
 
     encoder.createReadStream().pipe(outStream);
