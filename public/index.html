@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cronômetro com GIF via Backend</title>
+  <style>
+    body { background: #121212; color: white; font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+    #canvas { display: block; margin: 20px auto; background: #000; }
+    #gifPreview { display: none; margin-top: 20px; max-width: 100%; border: 2px solid #00e676; border-radius: 10px; }
+    #downloadBtn { display: none; margin-top: 20px; background: yellow; color: black; padding: 12px 24px;
+      font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; }
+    #status { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Cronômetro com GIF via Servidor</h1>
+  <button onclick="iniciarContagem()">Gerar GIF</button>
+  <div id="status"></div>
+  <canvas id="canvas" width="200" height="200"></canvas>
+  <img id="gifPreview" alt="GIF gerado" />
+  <a id="downloadBtn" download="cronometro.gif">Baixar GIF</a>
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const preview = document.getElementById("gifPreview");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const status = document.getElementById("status");
+    const tempoTotal = 31;
+    let frames = [];
+
+    function desenharFrame(progresso, tempoRestante) {
+      const centro = 100, raio = 70;
+      const anguloInicio = -Math.PI / 2;
+      const anguloFim = anguloInicio + progresso * 2 * Math.PI;
+      ctx.clearRect(0, 0, 200, 200);
+      ctx.beginPath(); ctx.arc(centro, centro, raio, 0, 2 * Math.PI);
+      ctx.strokeStyle = "#333"; ctx.lineWidth = 8; ctx.stroke();
+      ctx.beginPath(); ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
+      ctx.strokeStyle = "#00e676"; ctx.lineWidth = 8; ctx.stroke();
+      ctx.fillStyle = "#fff"; ctx.font = "bold 36px Arial";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(tempoRestante.toString(), centro, centro);
+    }
+
+    function iniciarContagem() {
+      frames = []; preview.style.display = "none"; downloadBtn.style.display = "none";
+      status.textContent = "Iniciando contagem...";
+      let tempoRestante = tempoTotal;
+
+      const intervalo = setInterval(() => {
+        const progresso = (tempoTotal - tempoRestante) / tempoTotal;
+        desenharFrame(progresso, tempoRestante);
+        frames.push(canvas.toDataURL("image/png"));
+        tempoRestante--;
+        if (tempoRestante < 0) {
+          clearInterval(intervalo);
+          status.textContent = "Enviando frames para o servidor...";
+          enviarParaServidor(frames);
+        }
+      }, 1000);
+    }
+
+    function enviarParaServidor(frames) {
+      fetch('/api/gerar-gif', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ frames })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.url) {
+          const gifURL = data.url;
+          preview.src = gifURL;
+          preview.style.display = "block";
+          downloadBtn.href = gifURL;
+          downloadBtn.style.display = "inline-block";
+          status.textContent = "GIF pronto!";
+        } else {
+          status.textContent = "Erro ao gerar GIF no servidor.";
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        status.textContent = "Erro ao enviar para o servidor.";
+      });
+    }
+  </script>
+</body>
+</html>
