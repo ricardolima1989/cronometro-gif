@@ -771,53 +771,73 @@ function desenharFrame(progresso, tempoRestante) {
   }
 }
 
+
+
+
+
+
+
+
 /* ================== CONTAGEM ================== */
 
+
 function iniciarContagem() {
- 
-  function iniciarContagem() {
-  desabilitarControles();
-  desativarLinkPreVisualizacao(); // <<< desativa o link ao clicar em "Gerar GIF"
-  frames = [];
+  cancelAlreadyClicked = false;
   cancelRequested = false;
+
+  desabilitarControles();
   document.getElementById("cancelButton").disabled = false;
-  const tempoTotalSegundos = tempoTotal;
+  isCronometroAtivo = true;
+  desativarLinkPreVisualizacao();
+
+  frames = [];
+  const tempoTotalSegundos = parseInt(document.getElementById("initialTime").value) || 30;
   status.textContent = "Contando...";
   gifDownload.innerHTML = "<p>Contando...</p>";
- 
- 
 
   let startTime = null;
   let lastFrameTime = 0;
-  
-  
+
   function animationLoop(timestamp) {
-  if (cancelRequested) {
-    status.textContent = "Processo cancelado!";
-    gifDownload.innerHTML = "<p>O processo foi cancelado.</p>";
-    habilitarControles();
-    return;
+    if (cancelRequested) {
+      status.textContent = "Processo cancelado!";
+      gifDownload.innerHTML = "<p>O processo foi cancelado.</p>";
+      habilitarControles();
+      return;
+    }
+
+    if (!startTime) startTime = timestamp;
+    const elapsed = (timestamp - startTime) / 1000;
+    let tempoRestante = tempoTotalSegundos - elapsed;
+    if (tempoRestante < 0) tempoRestante = 0;
+    const progresso = elapsed / tempoTotalSegundos;
+
+    desenharFrame(progresso, Math.floor(tempoRestante));
+
+    if (timestamp - lastFrameTime >= 50) {
+      frames.push(canvas.toDataURL("image/png"));
+      lastFrameTime = timestamp;
+    }
+
+    gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
+
+    if (elapsed < tempoTotalSegundos) {
+      requestAnimationFrame(animationLoop);
+    } else {
+      status.textContent = "Enviando para o servidor...";
+      gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
+
+      isCronometroAtivo = false;
+      ativarLinkPreVisualizacao();
+
+      enviarParaServidor(frames);
+    }
   }
 
-  if (!startTime) startTime = timestamp;
-  const elapsed = (timestamp - startTime) / 1000;
-  let tempoRestante = tempoTotalSegundos - elapsed;
-  if (tempoRestante < 0) tempoRestante = 0;
-  const progresso = elapsed / tempoTotalSegundos;
-
-  desenharFrame(progresso, Math.floor(tempoRestante));
-
-  if (timestamp - lastFrameTime >= 50) {
-    frames.push(canvas.toDataURL("image/png"));
-    lastFrameTime = timestamp;
-  }
-
-  gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
-
-
-if (elapsed < tempoTotalSegundos) {
   requestAnimationFrame(animationLoop);
-} else {
+}
+
+ else {
   status.textContent = "Finalizando...";
   gifDownload.innerHTML = "<p>Finalizando contagem...</p>";
 
