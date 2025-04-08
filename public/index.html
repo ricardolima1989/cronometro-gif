@@ -773,78 +773,64 @@ function desenharFrame(progresso, tempoRestante) {
 
 /* ================== CONTAGEM ================== */
 
-
-
 function iniciarContagem() {
-  cancelAlreadyClicked = false;
-  cancelRequested = false;
-
+ 
+  function iniciarContagem() {
   desabilitarControles();
+  desativarLinkPreVisualizacao(); // <<< desativa o link ao clicar em "Gerar GIF"
+  frames = [];
+  cancelRequested = false;
   document.getElementById("cancelButton").disabled = false;
-
-  isCronometroAtivo = true;
-  desativarLinkPreVisualizacao();
-
-  let tempoTotalSegundos = parseInt(document.getElementById("initialTime").value) || 30;
+  const tempoTotalSegundos = tempoTotal;
   status.textContent = "Contando...";
   gifDownload.innerHTML = "<p>Contando...</p>";
+ 
+ 
 
   let startTime = null;
   let lastFrameTime = 0;
-
+  
+  
   function animationLoop(timestamp) {
-    if (cancelRequested) {
-      status.textContent = "Processo cancelado!";
-      gifDownload.innerHTML = "<p>O processo foi cancelado.</p>";
-      habilitarControles();
-      return;
-    }
-
-    if (!startTime) startTime = timestamp;
-    const elapsed = (timestamp - startTime) / 1000;
-    let tempoRestante = tempoTotalSegundos - elapsed;
-    if (tempoRestante < 0) tempoRestante = 0;
-    const progresso = elapsed / tempoTotalSegundos;
-
-    desenharFrame(progresso, Math.floor(tempoRestante));
-
-    if (timestamp - lastFrameTime >= 50) {
-      frames.push(canvas.toDataURL("image/png"));
-      lastFrameTime = timestamp;
-    }
-
-    gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
-
-    if (elapsed < tempoTotalSegundos) {
-      requestAnimationFrame(animationLoop);
-    } else {
-      status.textContent = "Enviando para o servidor...";
-      gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
-
-      isCronometroAtivo = false;
-      ativarLinkPreVisualizacao();
-
-      // ✅ Chamando com delay para evitar erro de função indefinida
-      setTimeout(() => {
-        enviarParaServidor(frames);
-      }, 1000);
-    }
+  if (cancelRequested) {
+    status.textContent = "Processo cancelado!";
+    gifDownload.innerHTML = "<p>O processo foi cancelado.</p>";
+    habilitarControles();
+    return;
   }
 
+  if (!startTime) startTime = timestamp;
+  const elapsed = (timestamp - startTime) / 1000;
+  let tempoRestante = tempoTotalSegundos - elapsed;
+  if (tempoRestante < 0) tempoRestante = 0;
+  const progresso = elapsed / tempoTotalSegundos;
+
+  desenharFrame(progresso, Math.floor(tempoRestante));
+
+  if (timestamp - lastFrameTime >= 50) {
+    frames.push(canvas.toDataURL("image/png"));
+    lastFrameTime = timestamp;
+  }
+
+  gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
+
+
+if (elapsed < tempoTotalSegundos) {
   requestAnimationFrame(animationLoop);
-}
+} else {
+  status.textContent = "Finalizando...";
+  gifDownload.innerHTML = "<p>Finalizando contagem...</p>";
 
-
-
-  else {
-  status.textContent = "Enviando para o servidor...";
-  gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
-  
   isCronometroAtivo = false;
-  ativarLinkPreVisualizacao(); // <<< agora sim, reativa o link
+  ativarLinkPreVisualizacao(); // <<< mantém a prévia ativa até a barra completar
 
-  enviarParaServidor(frames);
+  // NÃO chama enviarParaServidor aqui!
+  // Isso vai acontecer dentro do setInterval da barra de progresso
 }
+
+
+
+
 
     // Passo 2: A função de animação
     const progressBar = document.getElementById("progressBarInner");
@@ -1296,7 +1282,6 @@ if (elapsed < tempoTotalSegundos) {
   ativarLinkPreVisualizacao(); // <<< libera o clique no link
 
   // Continua com o envio do GIF
-  enviarParaServidor(frames);
 }
 
 
