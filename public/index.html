@@ -853,6 +853,7 @@ function iniciarContagem() {
 }
 
 // Função para enviar para o servidor e gerar o GIF
+
 function enviarParaServidor(frames) {
   fetch('/api/gerar-gif', {
     method: 'POST',
@@ -866,7 +867,7 @@ function enviarParaServidor(frames) {
     // A resposta contém a URL do GIF gerado
     const gifUrl = data.url;
 
-    // Passo 2: Exibir a barra de progresso enquanto o GIF é gerado
+    // Exibir a barra de progresso enquanto o GIF é gerado
     const progressBar = document.getElementById("progressBarInner");
     const progressText = document.getElementById("progressPercent");
 
@@ -881,13 +882,20 @@ function enviarParaServidor(frames) {
       if (progress >= 100) {
         clearInterval(interval);
 
-        // Exibe o link para download
+        // Liberar todos os campos (resetar padrões)
+        habilitarControles();
+
+        // Destacar o link de download
         gifDownload.innerHTML = `
           <p>GIF gerado com sucesso!</p>
-          <a href="${gifUrl}" download="cronometro.gif" class="btn-download">Baixar GIF</a>
+          <a href="${gifUrl}" download="cronometro.gif" class="btn-download pulsante">Baixar GIF</a>
         `;
+        
+        // Estilo para o botão pulsante
+        document.querySelector(".pulsante").style.animation = "pulse 1s infinite"; 
       }
     }, 100); // A cada 100ms (5 segundos)
+
   })
   .catch(error => {
     console.error('Erro ao enviar os frames para o servidor:', error);
@@ -895,8 +903,30 @@ function enviarParaServidor(frames) {
   });
 }
 
-  
-  
+// Adicionar animação de destaque ao botão
+const style = document.createElement('style');
+style.innerHTML = `
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  .pulsante {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    padding: 14px 20px;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .pulsante:hover {
+    background-color: #0056b3;
+  }
+`;
+document.head.appendChild(style);
+
   
   
   
@@ -997,6 +1027,12 @@ function resetarPadroes() {
   document.getElementById("sombraX").value = 0;
   document.getElementById("sombraY").value = 0;
   sombraAnterior = "#FFFFFF";
+  
+    // Resetar barra de progresso
+  const progressBar = document.getElementById("progressBarInner");
+  const progressText = document.getElementById("progressPercent");
+  progressBar.style.width = '0%';  // Zera a barra de progresso
+  progressText.textContent = '0%'; // Zera o percentual
 
   // TRAÇADO
   document.getElementById("tipoTraco").value = "solid";
