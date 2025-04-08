@@ -771,70 +771,98 @@ function desenharFrame(progresso, tempoRestante) {
   }
 }
 
-
-
-
-
-
-
-
 /* ================== CONTAGEM ================== */
 
 function iniciarContagem() {
-  cancelAlreadyClicked = false;
-  cancelRequested = false;
-  frames = [];
-  isCronometroAtivo = true;
-
+ 
+  function iniciarContagem() {
   desabilitarControles();
+  desativarLinkPreVisualizacao(); // <<< desativa o link ao clicar em "Gerar GIF"
+  frames = [];
+  cancelRequested = false;
   document.getElementById("cancelButton").disabled = false;
-  desativarLinkPreVisualizacao();
-
-  let tempoTotalSegundos = parseInt(document.getElementById("initialTime").value) || 30;
-  let startTime = null;
-  let lastFrameTime = 0;
-
+  const tempoTotalSegundos = tempoTotal;
   status.textContent = "Contando...";
   gifDownload.innerHTML = "<p>Contando...</p>";
+ 
+ 
 
+  let startTime = null;
+  let lastFrameTime = 0;
+  
+  
   function animationLoop(timestamp) {
-    if (cancelRequested) {
-      status.textContent = "Processo cancelado!";
-      gifDownload.innerHTML = "<p>O processo foi cancelado.</p>";
-      habilitarControles();
-      return;
-    }
-
-    if (!startTime) startTime = timestamp;
-    const elapsed = (timestamp - startTime) / 1000;
-    let tempoRestante = tempoTotalSegundos - elapsed;
-    if (tempoRestante < 0) tempoRestante = 0;
-    const progresso = elapsed / tempoTotalSegundos;
-
-    desenharFrame(progresso, Math.ceil(tempoRestante));
-
-    if (timestamp - lastFrameTime >= 50) {
-      frames.push(canvas.toDataURL("image/png"));
-      lastFrameTime = timestamp;
-    }
-
-    gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.ceil(tempoRestante)} segundos</p>`;
-
-    if (elapsed < tempoTotalSegundos) {
-      requestAnimationFrame(animationLoop);
-    } else {
-      status.textContent = "Enviando para o servidor...";
-      gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
-      isCronometroAtivo = false;
-      ativarLinkPreVisualizacao();
-
-      enviarParaServidor(frames); // Chama o servidor após a contagem
-    }
+  if (cancelRequested) {
+    status.textContent = "Processo cancelado!";
+    gifDownload.innerHTML = "<p>O processo foi cancelado.</p>";
+    habilitarControles();
+    return;
   }
 
+  if (!startTime) startTime = timestamp;
+  const elapsed = (timestamp - startTime) / 1000;
+  let tempoRestante = tempoTotalSegundos - elapsed;
+  if (tempoRestante < 0) tempoRestante = 0;
+  const progresso = elapsed / tempoTotalSegundos;
+
+  desenharFrame(progresso, Math.floor(tempoRestante));
+
+  if (timestamp - lastFrameTime >= 50) {
+    frames.push(canvas.toDataURL("image/png"));
+    lastFrameTime = timestamp;
+  }
+
+  gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
+
+
+if (elapsed < tempoTotalSegundos) {
   requestAnimationFrame(animationLoop);
+} else {
+  status.textContent = "Finalizando...";
+  gifDownload.innerHTML = "<p>Finalizando contagem...</p>";
+
+  isCronometroAtivo = false;
+  ativarLinkPreVisualizacao(); // <<< mantém a prévia ativa até a barra completar
+
+  // NÃO chama enviarParaServidor aqui!
+  // Isso vai acontecer dentro do setInterval da barra de progresso
 }
 
+
+
+
+
+    // Passo 2: A função de animação
+    const progressBar = document.getElementById("progressBarInner");
+    const progressText = document.getElementById("progressPercent");
+
+    let progress = 0; // A barra começa em 0%
+
+    // Passo 3: A animação para preencher a barra
+    const interval = setInterval(() => {
+      // Para os primeiros 2 segundos, aumentamos de 0 a 50%
+      if (elapsed <= 2) {
+        progress = (elapsed / 2) * 50; // De 0 a 50% nos primeiros 2 segundos
+      }
+      // De 3 a 5 segundos, aumentamos de 50 a 80%
+      else if (elapsed > 2 && elapsed <= 5) {
+        progress = 50 + ((elapsed - 2) / 3) * 30; // De 50 a 80% nos próximos 3 segundos
+      } else if (elapsed > 5) {
+        progress = 80;  // A barra vai parar em 80% depois dos 5 segundos
+      }
+
+      // Atualiza a barra de progresso
+      progressBar.style.width = `${progress}%`;
+      progressText.textContent = `${Math.floor(progress)}%`;
+
+      // Após atingir 80%, a barra estagna
+      if (progress >= 80) {
+        clearInterval(interval); // Interrompe o intervalo para não ultrapassar 80%
+        
+        // Aguarda resposta do servidor, aí sim vai para 100%
+        enviarParaServidor(frames);
+      }
+    }, 100); // A cada 100ms (5 segundos)
   }
 }
 
@@ -1177,7 +1205,7 @@ function reiniciarPreVisualizacao() {
     if (tempoRestante < 0) tempoRestante = 0;
     const progresso = elapsed / tempoTotalSegundos;
 
-    desenharFrame(progresso, Math.ceil(tempoRestante));
+    desenharFrame(progresso, Math.floor(tempoRestante));
 
     if (timestamp - lastFrameTime >= 50) {
       lastFrameTime = timestamp;
