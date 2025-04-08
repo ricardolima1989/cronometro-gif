@@ -496,7 +496,7 @@ button:disabled {
       <div class="secao">
         <canvas id="canvas" width="500" height="500"
         style="width:300px;height:300px;"></canvas>
-        <p style="margin-top: 12px;">Pré-visualização</p>
+        <p id="previewText">Pré visualização <a href="#" id="restartPreviewLink">(Clique para ver novamente)</a></p>
       </div>
       <div class="secao">
         <h2>GIF Final para Download</h2>
@@ -1100,6 +1100,55 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 
 
+
+
+<script>
+// Definindo a função que reinicia a pré-visualização
+document.getElementById("restartPreviewLink").addEventListener("click", function(e) {
+  e.preventDefault(); // Impede o comportamento padrão do link
+
+  // Reseta a barra de progresso
+  const progressBar = document.getElementById("progressBarInner");
+  const progressText = document.getElementById("progressPercent");
+  progressBar.style.width = '0%';
+  progressText.textContent = '0%';
+
+  // Chama a função de pré-visualização novamente
+  reiniciarPreVisualizacao();
+
+});
+
+// Função para reiniciar a pré-visualização
+function reiniciarPreVisualizacao() {
+  let tempoTotalSegundos = parseInt(document.getElementById("initialTime").value) || 30;
+  
+  // Faz a pré-visualização rodar novamente (sem gerar o GIF)
+  let startTime = null;
+  let lastFrameTime = 0;
+  
+  function animationLoop(timestamp) {
+    if (!startTime) startTime = timestamp;
+    const elapsed = (timestamp - startTime) / 1000;
+    let tempoRestante = tempoTotalSegundos - elapsed;
+    if (tempoRestante < 0) tempoRestante = 0;
+    const progresso = elapsed / tempoTotalSegundos;
+
+    desenharFrame(progresso, Math.floor(tempoRestante));
+
+    if (timestamp - lastFrameTime >= 50) {
+      lastFrameTime = timestamp;
+    }
+
+    // Atualiza a barra de progresso durante a pré-visualização (sem ir até 100%)
+    if (elapsed < tempoTotalSegundos) {
+      requestAnimationFrame(animationLoop);
+    }
+  }
+
+  requestAnimationFrame(animationLoop);
+}
+
+</script>
 
 
 
