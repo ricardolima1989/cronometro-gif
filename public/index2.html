@@ -1,0 +1,1310 @@
+<DOCCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cronômetro com GIF via Servidor</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      background: #f4f4f4;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      width: 100%;
+      max-width: 1440px;
+    }
+    .col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .secao {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    .secao h2 {
+      font-size: 14px;
+      margin: 0 0 10px;
+      color: #444;
+    }
+    .grupo {
+      margin-bottom: 8px;
+    }
+    .grupo label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 4px;
+    }
+    .linha-color {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .linha-color input[type="color"] {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: none;
+    }
+    .linha-color input[type="text"] {
+      flex: 1;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    .linha-check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    select, input[type="range"], input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+  
+button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+
+/* Botão principal */
+button:not(.btn-reset):not(#cancelButton) {
+  background: #28a745;
+  color: white;
+  box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+}
+
+button:not(.btn-reset):not(#cancelButton):hover {
+  background: #218838;
+}
+
+/* Botão cancelar */
+#cancelButton {
+  background: #dc3545;
+  color: white;
+  box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+}
+
+#cancelButton:hover {
+  background: #c82333;
+}
+
+/* Botão reset */
+.btn-reset {
+  background: #6c757d;
+  color: white;
+  font-size: 15px;
+  box-shadow: 0 4px 10px rgba(108, 117, 125, 0.3);
+}
+
+.btn-reset:hover {
+  background: #5a6268;
+}
+
+/* Botões desabilitados */
+button:disabled {
+  background: #bbb !important;
+  color: #eee !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
+}
+
+  
+  
+  
+    #status {
+      margin-top: 8px;
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+    }
+    canvas {
+      background: transparent;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.2);
+    }
+    .preview {
+      text-align: center;
+    }
+    h1 {
+      grid-column: span 4;
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    /* Responsividade: em telas menores que 768px, empilha as colunas */
+@media (max-width: 768px) {
+  .container {
+    grid-template-columns: 1fr; /* Força uma única coluna */
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	
+	
+	
+  }
+  .col {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  canvas {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+.secao.destaque {
+  border: 2px solid #ff0000;
+  box-shadow: 0 0 12px rgba(255, 0, 0, 0.3);
+  animation: pulseBorda 1.5s infinite;
+  position: relative;
+}
+
+@keyframes pulseBorda {
+  0% { box-shadow: 0 0 12px rgba(255, 0, 0, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.8); }
+  100% { box-shadow: 0 0 12px rgba(255, 0, 0, 0.4); }
+}
+
+#progressBarOuter {
+  width: 100%;
+  height: 20px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+  margin-top: 5px;
+}
+
+#progressBarInner {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #28a745, #45c46a);
+  transition: width 0.3s ease;
+  border-radius: 10px 0 0 10px;
+}
+
+#progressPercent {
+  text-align: center;
+  font-size: 14px;
+  color: #444;
+  margin-top: 5px;
+  font-weight: bold;
+}
+
+
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Cronômetro com GIF via Servidor</h1>
+    
+    <!-- Coluna 1: Timer, Círculo e Borda -->
+    <div class="col">
+      <!-- Valor Inicial do Timer -->
+      <div class="secao destaque">
+        <h2>Valor Inicial do Timer</h2>
+		<span style="color: red; font-weight: bold; font-size: 13px;">👇 Comece por aqui!</span>
+        <div class="grupo">
+          <label for="initialTime">Defina o tempo inicial (segundos):</label>
+          <input type="number" id="initialTime" value="30" min="1" />
+        </div>
+      </div>
+      <!-- Configuração do Círculo -->
+      <div class="secao">
+        <h2>Configuração do Círculo</h2>
+        <div class="grupo">
+          <div class="linha-check">
+            <input type="checkbox" id="circuloTransparente" onchange="atualizarCampo('circulo')">
+            <label for="circuloTransparente">Círculo transparente</label>
+          </div>
+          <label>Cor do círculo:</label>
+          <div class="linha-color">
+            <input type="color" id="corCirculo" value="#4A90E2" />
+            <input type="text" id="hexCirculo" value="#4A90E2" />
+          </div>
+        </div>
+        <div class="grupo">
+          <label for="grossuraCirculo">
+            Grossura do círculo: <span id="displayGrossuraCirculo">28</span> px
+          </label>
+          <input type="range" id="grossuraCirculo" min="1" max="40" value="28" />
+        </div>
+        <div class="grupo">
+          <div class="linha-check">
+            <input type="checkbox" id="circuloContornoAtivo" onchange="toggleContorno('circulo')">
+            <label for="circuloContornoAtivo">Ativar contorno do círculo</label>
+          </div>
+        </div>
+        <div id="grupoCirculoContorno" style="display: none;">
+          <div class="grupo">
+            <label>Cor do contorno do círculo:</label>
+            <div class="linha-color">
+              <input type="color" id="corCirculoContorno" value="#000000" />
+              <input type="text" id="hexCirculoContorno" value="#000000" />
+            </div>
+          </div>
+          <div class="grupo">
+            <label for="grossuraCirculoContorno">
+              Grossura do contorno: <span id="displayGrossuraCirculoContorno">2</span> px
+            </label>
+            <input type="range" id="grossuraCirculoContorno" min="1" max="20" value="2" />
+          </div>
+          <div class="grupo">
+            <label>Tipo de linha:</label>
+            <select id="tipoCirculoContorno">
+              <option value="solid">Sólido</option>
+              <option value="dashed">Tracejado</option>
+              <option value="dotted">Pontilhado</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <!-- Configuração da Borda -->
+      <div class="secao">
+        <h2>Configuração da Borda</h2>
+        <div class="grupo">
+          <div class="linha-check">
+            <input type="checkbox" id="bordaTransparente" onchange="atualizarCampo('borda')">
+            <label for="bordaTransparente">Borda transparente</label>
+          </div>
+          <label>Cor da borda:</label>
+          <div class="linha-color">
+            <input type="color" id="corBorda" value="#2D3E50" />
+            <input type="text" id="hexBorda" value="#2D3E50" />
+          </div>
+        </div>
+        <div class="grupo">
+          <label for="grossuraBorda">
+            Grossura da borda: <span id="displayGrossuraBorda">5</span> px
+          </label>
+          <input type="range" id="grossuraBorda" min="1" max="40" value="5" />
+        </div>
+        <div class="grupo">
+          <div class="linha-check">
+            <input type="checkbox" id="bordaContornoAtivo" onchange="toggleContorno('borda')">
+            <label for="bordaContornoAtivo">Ativar contorno da borda</label>
+          </div>
+        </div>
+        <div id="grupoBordaContorno" style="display: none;">
+          <div class="grupo">
+            <label>Cor do contorno da borda:</label>
+            <div class="linha-color">
+              <input type="color" id="corBordaContorno" value="#000000" />
+              <input type="text" id="hexBordaContorno" value="#000000" />
+            </div>
+          </div>
+          <div class="grupo">
+            <label for="grossuraBordaContorno">
+              Grossura do contorno: <span id="displayGrossuraBordaContorno">2</span> px
+            </label>
+            <input type="range" id="grossuraBordaContorno" min="1" max="20" value="2" />
+          </div>
+          <div class="grupo">
+            <label>Tipo de linha:</label>
+            <select id="tipoBordaContorno">
+              <option value="solid">Sólido</option>
+              <option value="dashed">Tracejado</option>
+              <option value="dotted">Pontilhado</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Coluna 2: Texto e Fundo -->
+    <div class="col">
+      <!-- Configuração do Texto -->
+      <div class="secao">
+        <h2>Configuração do Texto</h2>
+        <div class="grupo">
+          <label>Cor do texto:</label>
+          <div class="linha-color">
+            <input type="color" id="corTexto" value="#ffffff" />
+            <input type="text" id="hexTexto" value="#ffffff" />
+          </div>
+        </div>
+        <div class="grupo">
+          <label for="tamanhoTexto">
+            Tamanho do texto: <span id="displayTamanhoTexto">90</span> px
+          </label>
+          <input type="range" id="tamanhoTexto" min="10" max="100" value="90" />
+        </div>
+        <div class="grupo">
+          <div class="linha-check">
+            <input type="checkbox" id="textoContornoAtivo" onchange="toggleContorno('texto')">
+            <label for="textoContornoAtivo">Ativar contorno do texto</label>
+          </div>
+        </div>
+        <div id="grupoTextoContorno" style="display: none;">
+          <div class="grupo">
+            <label>Cor do contorno do texto:</label>
+            <div class="linha-color">
+              <input type="color" id="corTextoContorno" value="#000000" />
+              <input type="text" id="hexTextoContorno" value="#000000" />
+            </div>
+          </div>
+          <div class="grupo">
+            <label for="grossuraTextoContorno">
+              Grossura do contorno: <span id="displayGrossuraTextoContorno">2</span> px
+            </label>
+            <input type="range" id="grossuraTextoContorno" min="1" max="20" value="2" />
+          </div>
+          <div class="grupo">
+            <label>Tipo de linha:</label>
+            <select id="tipoTextoContorno">
+              <option value="solid">Sólido</option>
+              <option value="dashed">Tracejado</option>
+              <option value="dotted">Pontilhado</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <!-- Configuração do Fundo -->
+      <div class="secao">
+        <h2>Configuração do Fundo</h2>
+        <div class="grupo">
+          <div class="linha-check">
+            <input type="checkbox" id="fundoTransparente" checked onchange="atualizarCampo('fundo')">
+            <label for="fundoTransparente">Fundo transparente</label>
+          </div>
+          <label>Cor do fundo:</label>
+          <div class="linha-color">
+            <input type="color" id="corFundo" value="#000000" disabled />
+            <input type="text" id="hexFundo" value="transparent" disabled />
+          </div>
+        </div>
+        <div class="grupo">
+          <div class="linha-check">
+            <input type="checkbox" id="fundoContornoAtivo" onchange="toggleContorno('fundo')">
+            <label for="fundoContornoAtivo">Ativar contorno do fundo</label>
+          </div>
+        </div>
+        <div id="grupoFundoContorno" style="display: none;">
+          <div class="grupo">
+            <label>Cor do contorno do fundo:</label>
+            <div class="linha-color">
+              <input type="color" id="corFundoContorno" value="#000000" />
+              <input type="text" id="hexFundoContorno" value="#000000" />
+            </div>
+          </div>
+          <div class="grupo">
+            <label for="grossuraFundoContorno">
+              Grossura do contorno: <span id="displayGrossuraFundoContorno">2</span> px
+            </label>
+            <input type="range" id="grossuraFundoContorno" min="1" max="20" value="2" />
+          </div>
+          <div class="grupo">
+            <label>Tipo de linha:</label>
+            <select id="tipoFundoContorno">
+              <option value="solid">Sólido</option>
+              <option value="dashed">Tracejado</option>
+              <option value="dotted">Pontilhado</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Coluna 3: Sombra e Traçado do Círculo -->
+    <div class="col">
+      <!-- Configuração da Sombra -->
+      <div class="secao">
+        <h2>Configuração da Sombra</h2>
+        <div class="grupo">
+          <div class="linha-check">
+            <input type="checkbox" id="sombraTransparente" onchange="toggleSombra()">
+            <label for="sombraTransparente">Sombra transparente</label>
+          </div>
+          <label>Cor da sombra:</label>
+          <div class="linha-color">
+            <input type="color" id="corSombra" value="#000000" />
+            <input type="text" id="hexSombra" value="#000000" />
+          </div>
+        </div>
+        <div id="grupoSombra">
+          <div class="grupo">
+            <label>Intensidade da sombra:</label>
+            <input type="range" id="sombra" min="0" max="30" value="8" />
+          </div>
+          <div class="grupo">
+            <label>Direção da sombra (horizontal):</label>
+            <input type="range" id="sombraX" min="-30" max="30" value="4" />
+          </div>
+          <div class="grupo">
+            <label>Direção da sombra (vertical):</label>
+            <input type="range" id="sombraY" min="-30" max="30" value="4" />
+          </div>
+        </div>
+        <button onclick="iniciarContagem()">Gerar GIF</button>
+		<button id="cancelButton" onclick="cancelProcess()" disabled>Cancelar</button>
+        <button class="btn-reset" onclick="resetarPadroes()">Resetar Padrões</button>
+        <div id="status">Aguardando...</div>
+		
+		
+      </div>
+      <!-- Traçado do Círculo -->
+      <div class="secao">
+        <h2>Traçado do Círculo</h2>
+        <div class="grupo">
+          <label>Tipo de traço do círculo:</label>
+          <select id="tipoTraco">
+            <option value="solid" selected>Sólido</option>
+            <option value="dashed">Tracejado</option>
+            <option value="dotted">Pontilhado</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Coluna 4: Pré-visualização e GIF final para download -->
+    <div class="col preview">
+      <div class="secao">
+        <canvas id="canvas" width="500" height="500"
+        style="width:300px;height:300px;"></canvas>
+<p id="previewText">Pré visualização <a href="#" id="restartPreviewLink">(Clique para ver novamente)</a></p>
+
+      </div>
+      <div class="secao">
+        <h2>GIF Final para Download</h2>
+        <div id="gifDownload">
+          <p>Aguardando...</p>
+		  
+        </div>
+				<div id="progressWrapper" style="margin-top: 12px;">
+  <div id="progressBarOuter">
+    <div id="progressBarInner"></div>
+  </div>
+  <div id="progressPercent">0%</div>
+</div>
+		
+		
+      </div>
+    </div>
+  
+  </div>
+  
+  
+  
+  
+  <script>
+/* ====== SETUP DO CANVAS COM ALTA DENSIDADE ====== */
+const LOGICAL_SIZE = 300;                   // Tamanho "visível"
+const scale = window.devicePixelRatio || 2; // Se não tiver devicePixelRatio, assume 25
+
+const canvas = document.getElementById("canvas");
+canvas.width  = LOGICAL_SIZE * scale;       // Ex.: 600 px se scale = 2
+canvas.height = LOGICAL_SIZE * scale;
+canvas.style.width  = LOGICAL_SIZE + "px";    // Continua 300x300 na página
+canvas.style.height = LOGICAL_SIZE + "px";
+
+const ctx = canvas.getContext("2d");
+ctx.scale(scale, scale);                    // Mantém as coordenadas lógicas
+
+/* ================================================ */
+
+const status      = document.getElementById("status");
+const gifDownload = document.getElementById("gifDownload");
+let frames = [];
+let tempoTotal = parseInt(document.getElementById("initialTime").value) || 30;
+let sombraAnterior = "#000000";
+
+/* ==================== UTILIDADES ==================== */
+const hex = id => document.getElementById(`hex${id}`).value || "transparent";
+const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+/* ================= CONTROLE DE UI =================== */
+function desabilitarControles() {
+  document.querySelectorAll(".container input, .container select, .container button")
+          .forEach(el => el.disabled = true);
+}
+
+function habilitarControles() {
+  document.querySelectorAll(".container input, .container select, .container button")
+          .forEach(el => el.disabled = false);
+  if (document.getElementById("fundoTransparente").checked) {
+    document.getElementById("corFundo").disabled = true;
+    document.getElementById("hexFundo").disabled = true;
+  }
+  if (document.getElementById("sombraTransparente").checked) {
+    document.getElementById("corSombra").disabled = true;
+    document.getElementById("hexSombra").disabled = true;
+  }
+}
+
+function atualizarCampo(tipo) {
+  if (document.getElementById(`cor${capitalize(tipo)}`) && document.getElementById(`hex${capitalize(tipo)}`)) {
+    const cb = document.getElementById(`${tipo}Transparente`) || document.getElementById(`${tipo}ContornoAtivo`);
+    const color    = document.getElementById(`cor${capitalize(tipo)}`);
+    const hexField = document.getElementById(`hex${capitalize(tipo)}`);
+    if (cb && cb.checked) {
+      hexField.value = "transparent";
+      color.disabled = true;
+      hexField.disabled = true;
+    } else {
+      color.disabled = false;
+      hexField.disabled = false;
+      hexField.value = color.value;
+    }
+  }
+  desenharFrame(0, tempoTotal);
+}
+
+function toggleContorno(tipo) {
+  const check = document.getElementById(`${tipo}ContornoAtivo`);
+  const grupo = document.getElementById(`grupo${capitalize(tipo)}Contorno`);
+  grupo.style.display = check.checked ? "block" : "none";
+  atualizarCampo(`${tipo}Contorno`);
+}
+
+function toggleSombra() {
+  const check      = document.getElementById("sombraTransparente");
+  const grupoSombra = document.getElementById("grupoSombra");
+  const corSombra   = document.getElementById("corSombra");
+  const hexSombra   = document.getElementById("hexSombra");
+
+  if (check.checked) {
+    sombraAnterior = corSombra.value;
+    grupoSombra.style.display = "none";
+    hexSombra.value = "transparent";
+    corSombra.disabled = true;
+    hexSombra.disabled = true;
+  } else {
+    grupoSombra.style.display = "block";
+    corSombra.disabled = false;
+    hexSombra.disabled = false;
+    if (hexSombra.value === "transparent") {
+      corSombra.value = sombraAnterior;
+      hexSombra.value = sombraAnterior;
+    }
+  }
+  desenharFrame(0, tempoTotal);
+}
+
+["Circulo", "Borda", "Texto", "Fundo", "Sombra", "TextoContorno"].forEach(tipo => {
+  document.getElementById(`cor${tipo}`).addEventListener("input", e => {
+    document.getElementById(`hex${tipo}`).value = e.target.value;
+    desenharFrame(0, tempoTotal);
+  });
+  document.getElementById(`hex${tipo}`).addEventListener("input", e => {
+    document.getElementById(`cor${tipo}`).value = e.target.value;
+    desenharFrame(0, tempoTotal);
+  });
+});
+
+/* ======== LISTENERS DE SLIDERS E SELECTS ======== */
+const binds = [
+  ["tamanhoTexto", "displayTamanhoTexto"],
+  ["grossuraBordaContorno", "displayGrossuraBordaContorno"],
+  ["grossuraCirculoContorno", "displayGrossuraCirculoContorno"],
+  ["grossuraTextoContorno", "displayGrossuraTextoContorno"],
+  ["grossuraFundoContorno", "displayGrossuraFundoContorno"],
+  ["grossuraCirculo", "displayGrossuraCirculo"],
+  ["grossuraBorda", "displayGrossuraBorda"]
+];
+binds.forEach(([input, span]) => {
+  document.getElementById(input).addEventListener("input", e => {
+    document.getElementById(span).textContent = e.target.value;
+    desenharFrame(0, tempoTotal);
+  });
+});
+
+document.getElementById("sombra").addEventListener("input", () => desenharFrame(0, tempoTotal));
+document.getElementById("sombraX").addEventListener("input", () => desenharFrame(0, tempoTotal));
+document.getElementById("sombraY").addEventListener("input", () => desenharFrame(0, tempoTotal));
+document.getElementById("tipoTraco").addEventListener("change", () => desenharFrame(0, tempoTotal));
+
+document.getElementById("initialTime").addEventListener("input", () => {
+  tempoTotal = parseInt(document.getElementById("initialTime").value) || 0;
+  desenharFrame(0, tempoTotal);
+});
+
+/* ================= DESENHO ================= */
+function desenharFrame(progresso, tempoRestante) {
+  const centro = 150, raio = 100;
+  const anguloInicio = -Math.PI / 2;
+  const anguloFim = anguloInicio + Math.min(progresso, 1) * 2 * Math.PI;
+  const corFundo   = hex("Fundo");
+  const corBorda   = hex("Borda");
+  const corCirculo = hex("Circulo");
+  const corTexto   = hex("Texto");
+  const corSombra  = hex("Sombra");
+  const tipoTraco  = document.getElementById("tipoTraco").value;
+  const sombra     = +document.getElementById("sombra").value;
+  const offsetX    = +document.getElementById("sombraX").value;
+  const offsetY    = +document.getElementById("sombraY").value;
+  const tamanhoTexto    = +document.getElementById("tamanhoTexto").value;
+  const grossuraCirculo = +document.getElementById("grossuraCirculo").value;
+  const grossuraBorda   = +document.getElementById("grossuraBorda").value;
+
+  // Limpeza do canvas antes de começar a desenhar
+  ctx.clearRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);  // Limpa o canvas, garantindo que o fundo seja transparente
+
+  // Condição para desenhar o fundo (só se fundo não for transparente)
+  if (corFundo !== "transparent" && !document.getElementById("fundoTransparente").checked) {
+    ctx.fillStyle = corFundo;
+    ctx.fillRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE); // Preenche o fundo com a cor escolhida
+  }
+
+  // Contorno do fundo
+  if (document.getElementById("fundoContornoAtivo")?.checked) {
+    const cor      = document.getElementById("hexFundoContorno").value;
+    const grossura = +document.getElementById("grossuraFundoContorno").value;
+    const tipo     = document.getElementById("tipoFundoContorno").value;
+    ctx.beginPath();
+    ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
+    ctx.strokeStyle = cor;
+    ctx.lineWidth   = grossura;
+    ctx.strokeRect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE);
+  }
+
+  // Borda
+  if (corBorda !== "transparent") {
+    ctx.beginPath();
+    ctx.setLineDash([]);
+    ctx.arc(centro, centro, raio, 0, 2 * Math.PI);
+    ctx.strokeStyle   = corBorda;
+    ctx.lineWidth     = grossuraBorda;
+    ctx.shadowBlur    = sombra;
+    ctx.shadowOffsetX = offsetX;
+    ctx.shadowOffsetY = offsetY;
+    ctx.shadowColor   = corSombra;
+    ctx.stroke();
+  }
+
+  // Contorno da borda
+  if (document.getElementById("bordaContornoAtivo")?.checked) {
+    const cor      = document.getElementById("hexBordaContorno").value;
+    const grossura = +document.getElementById("grossuraBordaContorno").value;
+    const tipo     = document.getElementById("tipoBordaContorno").value;
+    ctx.beginPath();
+    ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
+    ctx.arc(centro, centro, raio, 0, 2 * Math.PI);
+    ctx.strokeStyle = cor;
+    ctx.lineWidth   = grossura;
+    ctx.stroke();
+  }
+
+  // Círculo progressivo
+  if (corCirculo !== "transparent") {
+    ctx.beginPath();
+    ctx.setLineDash(tipoTraco === "dashed" ? [10,10] : tipoTraco === "dotted" ? [2,6] : []);
+    ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
+    ctx.strokeStyle   = corCirculo;
+    ctx.lineCap = "round";  // Isso adiciona o arredondamento nas pontas da barra
+	ctx.lineWidth = grossuraCirculo;
+    ctx.shadowBlur    = sombra;
+    ctx.shadowOffsetX = offsetX;
+    ctx.shadowOffsetY = offsetY;
+    ctx.shadowColor   = corSombra;
+    ctx.stroke();
+  }
+
+  // Contorno do círculo
+  if (document.getElementById("circuloContornoAtivo")?.checked) {
+    const cor      = document.getElementById("hexCirculoContorno").value;
+    const grossura = +document.getElementById("grossuraCirculoContorno").value;
+    const tipo     = document.getElementById("tipoCirculoContorno").value;
+    ctx.beginPath();
+    ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
+    ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
+    ctx.strokeStyle = cor;
+    ctx.lineWidth   = grossura;
+    ctx.stroke();
+  }
+
+  // Texto
+  ctx.fillStyle      = corTexto;
+  ctx.shadowBlur     = sombra;
+  ctx.shadowOffsetX  = offsetX;
+  ctx.shadowOffsetY  = offsetY;
+  ctx.shadowColor    = corSombra;
+  ctx.font           = `bold ${tamanhoTexto}px Arial`;
+  ctx.textAlign      = "center";
+  ctx.textBaseline   = "middle";
+  ctx.fillText(tempoRestante.toString(), centro, centro);
+
+  // Contorno do texto
+  if (document.getElementById("textoContornoAtivo")?.checked) {
+    const cor      = document.getElementById("hexTextoContorno").value;
+    const grossura = +document.getElementById("grossuraTextoContorno").value;
+    const tipo     = document.getElementById("tipoTextoContorno").value;
+    ctx.beginPath();
+    ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
+    ctx.strokeStyle = cor;
+    ctx.lineWidth   = grossura;
+    ctx.strokeText(tempoRestante.toString(), centro, centro);
+  }
+}
+
+/* ================== CONTAGEM ================== */
+
+function iniciarContagem() {
+ 
+  function iniciarContagem() {
+  desabilitarControles();
+  desativarLinkPreVisualizacao(); // <<< desativa o link ao clicar em "Gerar GIF"
+  frames = [];
+  cancelRequested = false;
+  document.getElementById("cancelButton").disabled = false;
+  const tempoTotalSegundos = tempoTotal;
+  status.textContent = "Contando...";
+  gifDownload.innerHTML = "<p>Contando...</p>";
+ 
+ 
+
+  let startTime = null;
+  let lastFrameTime = 0;
+  
+  
+  function animationLoop(timestamp) {
+  if (cancelRequested) {
+    status.textContent = "Processo cancelado!";
+    gifDownload.innerHTML = "<p>O processo foi cancelado.</p>";
+    habilitarControles();
+    return;
+  }
+
+  if (!startTime) startTime = timestamp;
+  const elapsed = (timestamp - startTime) / 1000;
+  let tempoRestante = tempoTotalSegundos - elapsed;
+  if (tempoRestante < 0) tempoRestante = 0;
+  const progresso = elapsed / tempoTotalSegundos;
+
+  desenharFrame(progresso, Math.floor(tempoRestante));
+
+  if (timestamp - lastFrameTime >= 50) {
+    frames.push(canvas.toDataURL("image/png"));
+    lastFrameTime = timestamp;
+  }
+
+  gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
+
+
+if (elapsed < tempoTotalSegundos) {
+  requestAnimationFrame(animationLoop);
+} else {
+  status.textContent = "Finalizando...";
+  gifDownload.innerHTML = "<p>Finalizando contagem...</p>";
+
+  isCronometroAtivo = false;
+  ativarLinkPreVisualizacao(); // <<< mantém a prévia ativa até a barra completar
+
+  // NÃO chama enviarParaServidor aqui!
+  // Isso vai acontecer dentro do setInterval da barra de progresso
+}
+
+
+
+
+
+    // Passo 2: A função de animação
+    const progressBar = document.getElementById("progressBarInner");
+    const progressText = document.getElementById("progressPercent");
+
+    let progress = 0; // A barra começa em 0%
+
+    // Passo 3: A animação para preencher a barra
+    const interval = setInterval(() => {
+      // Para os primeiros 2 segundos, aumentamos de 0 a 50%
+      if (elapsed <= 2) {
+        progress = (elapsed / 2) * 50; // De 0 a 50% nos primeiros 2 segundos
+      }
+      // De 3 a 5 segundos, aumentamos de 50 a 80%
+      else if (elapsed > 2 && elapsed <= 5) {
+        progress = 50 + ((elapsed - 2) / 3) * 30; // De 50 a 80% nos próximos 3 segundos
+      } else if (elapsed > 5) {
+        progress = 80;  // A barra vai parar em 80% depois dos 5 segundos
+      }
+
+      // Atualiza a barra de progresso
+      progressBar.style.width = `${progress}%`;
+      progressText.textContent = `${Math.floor(progress)}%`;
+
+      // Após atingir 80%, a barra estagna
+      if (progress >= 80) {
+        clearInterval(interval); // Interrompe o intervalo para não ultrapassar 80%
+        
+        // Aguarda resposta do servidor, aí sim vai para 100%
+        enviarParaServidor(frames);
+      }
+    }, 100); // A cada 100ms (5 segundos)
+  }
+}
+
+// Função para enviar para o servidor e gerar o GIF
+
+
+
+function enviarParaServidor(frames) {
+  fetch('/api/gerar-gif', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ frames })
+  })
+  .then(response => response.json())
+  .then(data => {
+    const gifUrl = data.url;
+
+    // Exibir a barra de progresso enquanto o GIF é gerado
+    const progressBar = document.getElementById("progressBarInner");
+    const progressText = document.getElementById("progressPercent");
+
+    let progress = 80; // Começa em 80%
+
+    const interval = setInterval(() => {
+      progress += 2; // Incrementa 2% a cada 100ms
+      progressBar.style.width = `${progress}%`;
+      progressText.textContent = `${Math.floor(progress)}%`;
+
+      // Finaliza a animação quando atinge 100%
+      if (progress >= 100) {
+        clearInterval(interval);
+
+        // Liberar todos os campos (resetar padrões)
+        habilitarControles();
+
+        // Destacar o link de download com efeito de borda explosiva
+// Alterações no código para resetar a barra de progresso e percentual
+gifDownload.innerHTML = `
+  <p>GIF gerado com sucesso!</p>
+  <a href="${gifUrl}" download="cronometro.gif" class="btn-download pulsante" id="downloadButton">Baixar GIF</a>
+`;
+
+document.getElementById('downloadButton').addEventListener('click', function() {
+  // Resetando a barra de progresso e o percentual
+  const progressBar = document.getElementById("progressBarInner");
+  const progressText = document.getElementById("progressPercent");
+
+  // Zera a barra e o percentual
+  progressBar.style.width = '0%';
+  progressText.textContent = '0%';
+  
+  // Opcional: Você pode dar um destaque no botão de "Baixar GIF" e resetar os outros campos, se necessário
+  const downloadButton = document.getElementById('downloadButton');
+  downloadButton.classList.remove('pulsante');
+  downloadButton.style.backgroundColor = '#6c757d'; // Cor padrão após o clique (opcional)
+});
+
+      }
+    }, 100); // A cada 100ms (5 segundos)
+
+  })
+  .catch(error => {
+    console.error('Erro ao enviar os frames para o servidor:', error);
+    alert('Erro ao gerar o GIF. Tente novamente.');
+  });
+}
+
+// Alterações no estilo CSS para o efeito de pulsação e ajuste no espaçamento
+const style = document.createElement('style');
+style.innerHTML = `
+  @keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 5px #007bff; }
+    50% { transform: scale(1.1); box-shadow: 0 0 15px #007bff, 0 0 30px #007bff; }
+    100% { transform: scale(1); box-shadow: 0 0 5px #007bff; }
+  }
+
+  .pulsante {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    padding: 14px 20px;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: inline-block;
+    margin-top: 10px; /* Reduzido o espaçamento superior */
+  }
+
+  .pulsante:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+    animation: pulse 1s infinite; /* Pulsação contínua no hover */
+  }
+
+  /* Efeito de borda pulsante */
+  .pulsante {
+    border: 3px solid #007bff;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pulsante:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300%;
+    height: 300%;
+    background: rgba(0, 123, 255, 0.5);
+    transition: width 0.5s, height 0.5s, top 0.5s, left 0.5s;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .pulsante:hover:before {
+    width: 350%;
+    height: 350%;
+    top: -125%;
+    left: -125%;
+  }
+
+  /* Ajustando o espaçamento entre o texto e o botão */
+  #gifDownload p {
+    margin-bottom: 10px; /* Reduzido o espaço entre o texto e o botão */
+  }
+`;
+document.head.appendChild(style);
+  
+  
+  
+  
+  
+  
+
+  requestAnimationFrame(animationLoop);
+}
+
+let cancelRequested = false; // ← DECLARAÇÃO GLOBAL AQUI
+
+
+function cancelProcess() {
+  if (cancelAlreadyClicked) return;
+  cancelAlreadyClicked = true;
+
+  cancelRequested = true;
+  isCronometroAtivo = false;
+
+  // Desativa imediatamente o botão cancelar
+  const btnCancelar = document.getElementById("cancelButton");
+  btnCancelar.disabled = true;
+
+  // Zera visual da barra
+const progressBar = document.getElementById("progressBarInner");
+const progressText = document.getElementById("progressPercent");
+progressBar.style.width = '0%';
+progressText.textContent = '0%';
+
+// Aguarda 1 segundo para travar o botão cancelar
+setTimeout(() => {
+  document.getElementById("cancelButton").disabled = true;
+}, 1000);
+
+  // Zera preview sem iniciar animação
+  const tempoRestante = parseInt(document.getElementById("initialTime").value) || 30;
+  desenharFrame(0, tempoRestante);
+
+  // Libera pré-visualização e campos
+  ativarLinkPreVisualizacao();
+  habilitarControles();
+
+  // Atualiza status
+  status.textContent = "Processo cancelado!";
+  gifDownload.innerHTML = "<p>O processo foi cancelado.</p>";
+
+  // PREPARA para novo ciclo do "Gerar GIF"
+  setTimeout(() => {
+    cancelAlreadyClicked = false;
+  }, 100); // liberação suave para o próximo clique no fluxo
+}
+
+
+
+
+/* ================= RESETAR PADRÕES ================= */
+function resetarPadroes() {
+  // Definir valores padrão para os elementos
+  document.getElementById("initialTime").value = 30;
+  tempoTotal = 30;
+
+  // CÍRCULO
+  document.getElementById("circuloTransparente").checked = false;
+  document.getElementById("corCirculo").value = "#FF0000";  // Vermelho
+  document.getElementById("hexCirculo").value = "#FF0000";  // Vermelho
+  document.getElementById("grossuraCirculo").value = 35;  // 35 px
+  document.getElementById("displayGrossuraCirculo").textContent = 35;
+  document.getElementById("circuloContornoAtivo").checked = false;
+  document.getElementById("grupoCirculoContorno").style.display = "none";
+  document.getElementById("corCirculoContorno").value = "#000000";  // Preto (sem contorno)
+  document.getElementById("hexCirculoContorno").value = "#000000";
+  document.getElementById("grossuraCirculoContorno").value = 2;
+  document.getElementById("displayGrossuraCirculoContorno").textContent = 2;
+  document.getElementById("tipoCirculoContorno").value = "solid";
+
+  // BORDA
+  document.getElementById("bordaTransparente").checked = false;
+  document.getElementById("corBorda").value = "#2E2E2E";  // Cinza bem escuro
+  document.getElementById("hexBorda").value = "#2E2E2E";  // Cinza bem escuro
+  document.getElementById("grossuraBorda").value = 34;  // 34 px
+  document.getElementById("displayGrossuraBorda").textContent = 34;
+  document.getElementById("bordaContornoAtivo").checked = false;
+  document.getElementById("grupoBordaContorno").style.display = "none";
+  document.getElementById("corBordaContorno").value = "#000000";  // Preto (sem contorno)
+  document.getElementById("hexBordaContorno").value = "#000000";
+  document.getElementById("grossuraBordaContorno").value = 2;
+  document.getElementById("displayGrossuraBordaContorno").textContent = 2;
+  document.getElementById("tipoBordaContorno").value = "solid";
+
+  // TEXTO
+  document.getElementById("corTexto").value = "#FF0000";  // Vermelho
+  document.getElementById("hexTexto").value = "#FF0000";  // Vermelho
+  document.getElementById("tamanhoTexto").value = 90;
+  document.getElementById("displayTamanhoTexto").textContent = 90;
+  document.getElementById("textoContornoAtivo").checked = false;
+  document.getElementById("grupoTextoContorno").style.display = "none";
+  document.getElementById("corTextoContorno").value = "#000000";  // Preto (sem contorno)
+  document.getElementById("hexTextoContorno").value = "#000000";
+  document.getElementById("grossuraTextoContorno").value = 2;
+  document.getElementById("displayGrossuraTextoContorno").textContent = 2;
+  document.getElementById("tipoTextoContorno").value = "solid";
+
+  // FUNDO
+  document.getElementById("fundoTransparente").checked = true;
+  document.getElementById("corFundo").value = "#000000";
+  document.getElementById("hexFundo").value = "transparent";
+  document.getElementById("corFundo").disabled = true;
+  document.getElementById("hexFundo").disabled = true;
+  document.getElementById("fundoContornoAtivo").checked = false;
+  document.getElementById("grupoFundoContorno").style.display = "none";
+  document.getElementById("corFundoContorno").value = "#000000";
+  document.getElementById("hexFundoContorno").value = "#000000";
+  document.getElementById("grossuraFundoContorno").value = 2;
+  document.getElementById("displayGrossuraFundoContorno").textContent = 2;
+  document.getElementById("tipoFundoContorno").value = "solid";
+
+  // SOMBRA
+  document.getElementById("sombraTransparente").checked = true;  // Sombra transparente
+  document.getElementById("corSombra").value = "#FFFFFF";  // Branco (transparente)
+  document.getElementById("hexSombra").value = "#FFFFFF";  // Branco (transparente)
+  document.getElementById("corSombra").disabled = true;
+  document.getElementById("hexSombra").disabled = true;
+  document.getElementById("grupoSombra").style.display = "none";
+  document.getElementById("sombra").value = 0;  // Sem sombra
+  document.getElementById("sombraX").value = 0;
+  document.getElementById("sombraY").value = 0;
+  sombraAnterior = "#FFFFFF";
+  
+    // Resetar barra de progresso
+  const progressBar = document.getElementById("progressBarInner");
+  const progressText = document.getElementById("progressPercent");
+  progressBar.style.width = '0%';  // Zera a barra de progresso
+  progressText.textContent = '0%'; // Zera o percentual
+
+  // TRAÇADO
+  document.getElementById("tipoTraco").value = "solid";
+
+  // Redesenha preview
+  desenharFrame(0, tempoTotal);
+}
+
+/* ================== INICIALIZAÇÃO ================== */
+document.addEventListener("DOMContentLoaded", () => {
+  // Inicializa a página com as configurações padrão
+  tempoTotal = +document.getElementById("initialTime").value || 30;
+  resetarPadroes(); // Aplica as configurações padrão imediatamente
+  desenharFrame(0, tempoTotal);
+});
+</script>
+
+
+
+
+<script>
+// Variável global para controlar o estado do cronômetro
+let isCronometroAtivo = false;
+let ultimaPreVisualizacao = false;
+
+
+// Função para desativar o link de "Pré visualização"
+function desativarLinkPreVisualizacao() {
+  const linkPreVisualizacao = document.getElementById("restartPreviewLink");
+   ultimaPreVisualizacao = true;
+  linkPreVisualizacao.style.pointerEvents = 'none';  // Desativa o clique
+  linkPreVisualizacao.style.opacity = 0.5;           // Deixa o link visualmente inativo
+}
+
+// Função para ativar o link de "Pré visualização"
+function ativarLinkPreVisualizacao() {
+  const linkPreVisualizacao = document.getElementById("restartPreviewLink");
+  linkPreVisualizacao.style.pointerEvents = 'auto';  // Reativa o clique
+  linkPreVisualizacao.style.opacity = 1;             // Restaura a opacidade normal
+}
+
+// Definindo a função que reinicia a pré-visualização
+document.getElementById("restartPreviewLink").addEventListener("click", function(e) {
+  e.preventDefault(); // Impede o comportamento padrão do link
+
+  // Só reinicia a pré-visualização se o cronômetro não estiver ativo
+  if (!isCronometroAtivo) {
+    // Reseta a barra de progresso
+    const progressBar = document.getElementById("progressBarInner");
+    const progressText = document.getElementById("progressPercent");
+    progressBar.style.width = '0%';
+    progressText.textContent = '0%';
+
+    // Chama a função de pré-visualização novamente
+    reiniciarPreVisualizacao();
+  }
+});
+
+// Função para reiniciar a pré-visualização
+function reiniciarPreVisualizacao() {
+  let tempoTotalSegundos = parseInt(document.getElementById("initialTime").value) || 30;
+
+  // Zera tudo antes de recomeçar
+  const progressBar = document.getElementById("progressBarInner");
+  const progressText = document.getElementById("progressPercent");
+  progressBar.style.width = '0%';
+  progressText.textContent = '0%';
+
+  let startTime = null;
+  let lastFrameTime = 0;
+
+  function previewLoop(timestamp) {
+    if (!startTime) startTime = timestamp;
+    const elapsed = (timestamp - startTime) / 1000;
+    let tempoRestante = tempoTotalSegundos - elapsed;
+    if (tempoRestante < 0) tempoRestante = 0;
+    const progresso = elapsed / tempoTotalSegundos;
+
+    desenharFrame(progresso, Math.floor(tempoRestante));
+
+    if (timestamp - lastFrameTime >= 50) {
+      lastFrameTime = timestamp;
+    }
+
+    if (elapsed < tempoTotalSegundos) {
+      requestAnimationFrame(previewLoop);
+    }
+  }
+
+  requestAnimationFrame(previewLoop);
+}
+
+let cancelAlreadyClicked = false;
+let cancelado = false; // ← NOVA VARIÁVEL GLOBAL
+
+
+// Função para iniciar a contagem e desativar o link de pré-visualização
+function iniciarContagem() {
+  
+cancelAlreadyClicked = false;
+cancelRequested = false;
+  
+
+  desabilitarControles();
+  document.getElementById("cancelButton").disabled = false; // ← ATIVA o botão cancelar após desabilitar os outros
+
+  isCronometroAtivo = true;
+  desativarLinkPreVisualizacao();
+
+
+  let tempoTotalSegundos = parseInt(document.getElementById("initialTime").value) || 30;
+  status.textContent = "Contando...";
+  gifDownload.innerHTML = "<p>Contando...</p>";
+  
+  // O código para a contagem e geração do GIF continua aqui...
+  
+  let startTime = null;
+  let lastFrameTime = 0;
+  
+  function animationLoop(timestamp) {
+    if (cancelRequested) {
+      status.textContent = "Processo cancelado!";
+      gifDownload.innerHTML = "<p>O processo foi cancelado.</p>";
+      habilitarControles();
+      return;
+    }
+
+    if (!startTime) startTime = timestamp;
+    const elapsed = (timestamp - startTime) / 1000;
+    let tempoRestante = tempoTotalSegundos - elapsed;
+    if (tempoRestante < 0) tempoRestante = 0;
+    const progresso = elapsed / tempoTotalSegundos;
+
+    desenharFrame(progresso, Math.floor(tempoRestante));
+
+    if (timestamp - lastFrameTime >= 50) {
+      frames.push(canvas.toDataURL("image/png"));
+      lastFrameTime = timestamp;
+    }
+
+    gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
+
+
+if (elapsed < tempoTotalSegundos) {
+  requestAnimationFrame(animationLoop);
+} else {
+  // Status atualizado
+  status.textContent = "Enviando para o servidor...";
+  gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
+
+  // Aqui já podemos liberar o link de pré-visualização
+  isCronometroAtivo = false;
+  ativarLinkPreVisualizacao(); // <<< libera o clique no link
+
+  // Continua com o envio do GIF
+}
+
+
+
+
+  }
+
+  requestAnimationFrame(animationLoop);
+}
+
+// Função para finalizar o processo e reativar o link de pré-visualização
+function finalizarGeracaoGif() {
+  // Reativa o link de "Pré visualização" quando o GIF for gerado
+  ativarLinkPreVisualizacao();
+
+  // Restaura o estado do cronômetro
+  isCronometroAtivo = false;
+}
+
+
+</script>
+
+
+
+</body>
+</html>
