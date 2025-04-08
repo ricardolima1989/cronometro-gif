@@ -496,7 +496,8 @@ button:disabled {
       <div class="secao">
         <canvas id="canvas" width="500" height="500"
         style="width:300px;height:300px;"></canvas>
-        <p id="previewText">Pré visualização <a href="#" id="restartPreviewLink">(Clique para ver novamente)</a></p>
+<p id="previewText">Pré visualização <a href="#" id="restartPreviewLink">(Clique para ver novamente)</a></p>
+
       </div>
       <div class="secao">
         <h2>GIF Final para Download</h2>
@@ -774,10 +775,12 @@ function desenharFrame(progresso, tempoRestante) {
 
 function iniciarContagem() {
  
+  function iniciarContagem() {
   desabilitarControles();
+  desativarLinkPreVisualizacao(); // <<< desativa o link ao clicar em "Gerar GIF"
   frames = [];
   cancelRequested = false;
-  document.getElementById("cancelButton").disabled = false; // ← HABILITA O BOTÃO
+  document.getElementById("cancelButton").disabled = false;
   const tempoTotalSegundos = tempoTotal;
   status.textContent = "Contando...";
   gifDownload.innerHTML = "<p>Contando...</p>";
@@ -814,9 +817,14 @@ function iniciarContagem() {
   if (elapsed < tempoTotalSegundos) {
     requestAnimationFrame(animationLoop);
   } else {
-    // Passo 1: Começar a preencher a barra de progresso
-    status.textContent = "Enviando para o servidor...";
-    gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
+  status.textContent = "Enviando para o servidor...";
+  gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
+  
+  isCronometroAtivo = false;
+  ativarLinkPreVisualizacao(); // <<< agora sim, reativa o link
+
+  enviarParaServidor(frames);
+}
 
     // Passo 2: A função de animação
     const progressBar = document.getElementById("progressBarInner");
@@ -992,17 +1000,48 @@ document.head.appendChild(style);
 let cancelRequested = false; // ← DECLARAÇÃO GLOBAL AQUI
 
 
-
-
-
-
-// Função para cancelamento
 function cancelProcess() {
-  cancelRequested = true;  // Marca que o processo foi cancelado
-  habilitarControles();    // Habilita os controles novamente
+  if (cancelAlreadyClicked) return;
+  cancelAlreadyClicked = true;
+
+  cancelRequested = true;
+  isCronometroAtivo = false;
+
+  // Desativa imediatamente o botão cancelar
+  const btnCancelar = document.getElementById("cancelButton");
+  btnCancelar.disabled = true;
+
+  // Zera visual da barra
+const progressBar = document.getElementById("progressBarInner");
+const progressText = document.getElementById("progressPercent");
+progressBar.style.width = '0%';
+progressText.textContent = '0%';
+
+// Aguarda 1 segundo para travar o botão cancelar
+setTimeout(() => {
+  document.getElementById("cancelButton").disabled = true;
+}, 1000);
+
+  // Zera preview sem iniciar animação
+  const tempoRestante = parseInt(document.getElementById("initialTime").value) || 30;
+  desenharFrame(0, tempoRestante);
+
+  // Libera pré-visualização e campos
+  ativarLinkPreVisualizacao();
+  habilitarControles();
+
+  // Atualiza status
   status.textContent = "Processo cancelado!";
   gifDownload.innerHTML = "<p>O processo foi cancelado.</p>";
+
+  // PREPARA para novo ciclo do "Gerar GIF"
+  setTimeout(() => {
+    cancelAlreadyClicked = false;
+  }, 100); // liberação suave para o próximo clique no fluxo
 }
+
+
+
 
 /* ================= RESETAR PADRÕES ================= */
 function resetarPadroes() {
@@ -1103,30 +1142,57 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 <script>
+// Variável global para controlar o estado do cronômetro
+let isCronometroAtivo = false;
+let ultimaPreVisualizacao = false;
+
+
+// Função para desativar o link de "Pré visualização"
+function desativarLinkPreVisualizacao() {
+  const linkPreVisualizacao = document.getElementById("restartPreviewLink");
+   ultimaPreVisualizacao = true;
+  linkPreVisualizacao.style.pointerEvents = 'none';  // Desativa o clique
+  linkPreVisualizacao.style.opacity = 0.5;           // Deixa o link visualmente inativo
+}
+
+// Função para ativar o link de "Pré visualização"
+function ativarLinkPreVisualizacao() {
+  const linkPreVisualizacao = document.getElementById("restartPreviewLink");
+  linkPreVisualizacao.style.pointerEvents = 'auto';  // Reativa o clique
+  linkPreVisualizacao.style.opacity = 1;             // Restaura a opacidade normal
+}
+
 // Definindo a função que reinicia a pré-visualização
 document.getElementById("restartPreviewLink").addEventListener("click", function(e) {
   e.preventDefault(); // Impede o comportamento padrão do link
 
-  // Reseta a barra de progresso
-  const progressBar = document.getElementById("progressBarInner");
-  const progressText = document.getElementById("progressPercent");
-  progressBar.style.width = '0%';
-  progressText.textContent = '0%';
+  // Só reinicia a pré-visualização se o cronômetro não estiver ativo
+  if (!isCronometroAtivo) {
+    // Reseta a barra de progresso
+    const progressBar = document.getElementById("progressBarInner");
+    const progressText = document.getElementById("progressPercent");
+    progressBar.style.width = '0%';
+    progressText.textContent = '0%';
 
-  // Chama a função de pré-visualização novamente
-  reiniciarPreVisualizacao();
-
+    // Chama a função de pré-visualização novamente
+    reiniciarPreVisualizacao();
+  }
 });
 
 // Função para reiniciar a pré-visualização
 function reiniciarPreVisualizacao() {
   let tempoTotalSegundos = parseInt(document.getElementById("initialTime").value) || 30;
-  
-  // Faz a pré-visualização rodar novamente (sem gerar o GIF)
+
+  // Zera tudo antes de recomeçar
+  const progressBar = document.getElementById("progressBarInner");
+  const progressText = document.getElementById("progressPercent");
+  progressBar.style.width = '0%';
+  progressText.textContent = '0%';
+
   let startTime = null;
   let lastFrameTime = 0;
-  
-  function animationLoop(timestamp) {
+
+  function previewLoop(timestamp) {
     if (!startTime) startTime = timestamp;
     const elapsed = (timestamp - startTime) / 1000;
     let tempoRestante = tempoTotalSegundos - elapsed;
@@ -1139,14 +1205,97 @@ function reiniciarPreVisualizacao() {
       lastFrameTime = timestamp;
     }
 
-    // Atualiza a barra de progresso durante a pré-visualização (sem ir até 100%)
     if (elapsed < tempoTotalSegundos) {
-      requestAnimationFrame(animationLoop);
+      requestAnimationFrame(previewLoop);
     }
+  }
+
+  requestAnimationFrame(previewLoop);
+}
+
+let cancelAlreadyClicked = false;
+let cancelado = false; // ← NOVA VARIÁVEL GLOBAL
+
+
+// Função para iniciar a contagem e desativar o link de pré-visualização
+function iniciarContagem() {
+  
+cancelAlreadyClicked = false;
+cancelRequested = false;
+  
+
+  desabilitarControles();
+  document.getElementById("cancelButton").disabled = false; // ← ATIVA o botão cancelar após desabilitar os outros
+
+  isCronometroAtivo = true;
+  desativarLinkPreVisualizacao();
+
+
+  let tempoTotalSegundos = parseInt(document.getElementById("initialTime").value) || 30;
+  status.textContent = "Contando...";
+  gifDownload.innerHTML = "<p>Contando...</p>";
+  
+  // O código para a contagem e geração do GIF continua aqui...
+  
+  let startTime = null;
+  let lastFrameTime = 0;
+  
+  function animationLoop(timestamp) {
+    if (cancelRequested) {
+      status.textContent = "Processo cancelado!";
+      gifDownload.innerHTML = "<p>O processo foi cancelado.</p>";
+      habilitarControles();
+      return;
+    }
+
+    if (!startTime) startTime = timestamp;
+    const elapsed = (timestamp - startTime) / 1000;
+    let tempoRestante = tempoTotalSegundos - elapsed;
+    if (tempoRestante < 0) tempoRestante = 0;
+    const progresso = elapsed / tempoTotalSegundos;
+
+    desenharFrame(progresso, Math.floor(tempoRestante));
+
+    if (timestamp - lastFrameTime >= 50) {
+      frames.push(canvas.toDataURL("image/png"));
+      lastFrameTime = timestamp;
+    }
+
+    gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
+
+
+if (elapsed < tempoTotalSegundos) {
+  requestAnimationFrame(animationLoop);
+} else {
+  // Status atualizado
+  status.textContent = "Enviando para o servidor...";
+  gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
+
+  // Aqui já podemos liberar o link de pré-visualização
+  isCronometroAtivo = false;
+  ativarLinkPreVisualizacao(); // <<< libera o clique no link
+
+  // Continua com o envio do GIF
+  enviarParaServidor(frames);
+}
+
+
+
+
   }
 
   requestAnimationFrame(animationLoop);
 }
+
+// Função para finalizar o processo e reativar o link de pré-visualização
+function finalizarGeracaoGif() {
+  // Reativa o link de "Pré visualização" quando o GIF for gerado
+  ativarLinkPreVisualizacao();
+
+  // Restaura o estado do cronômetro
+  isCronometroAtivo = false;
+}
+
 
 </script>
 
