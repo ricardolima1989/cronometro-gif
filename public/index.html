@@ -1223,7 +1223,7 @@ function reiniciarPreVisualizacao() {
     if (tempoRestante < 0) tempoRestante = 0;
     const progresso = elapsed / tempoTotalSegundos;
 
-    desenharFrame(progresso, Math.floor(tempoRestante));
+    desenharFrame(progresso, Math.ceil(tempoRestante));
 
     if (timestamp - lastFrameTime >= 50) {
       lastFrameTime = timestamp;
