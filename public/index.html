@@ -788,9 +788,6 @@ function iniciarContagem() {
   let lastFrameTime = 0;
   
   
-  
-  
-  
   function animationLoop(timestamp) {
   if (cancelRequested) {
     status.textContent = "Processo cancelado!";
@@ -827,7 +824,7 @@ function iniciarContagem() {
     
     let progress = 0; // A barra começa em 0%
 
-        // Passo 3: A animação para preencher a barra
+    // Passo 3: A animação para preencher a barra
     const interval = setInterval(() => {
       // Para os primeiros 2 segundos, aumentamos de 0 a 50%
       if (elapsed <= 2) {
@@ -836,21 +833,21 @@ function iniciarContagem() {
       // De 3 a 5 segundos, aumentamos de 50 a 80%
       else if (elapsed > 2 && elapsed <= 5) {
         progress = 50 + ((elapsed - 2) / 3) * 30; // De 50 a 80% nos próximos 3 segundos
-      } else {
-        progress = 80 + ((elapsed - 5) / (tempoTotalSegundos - 5)) * 20; // De 80 a 100% depois
+      } else if (elapsed > 5 && progress < 80) {
+        progress = 80;  // Abarca o tempo restante até 80% estagnado
       }
 
+      // Atualiza a barra de progresso
       progressBar.style.width = `${progress}%`;
       progressText.textContent = `${Math.floor(progress)}%`;
 
-      // Finaliza a animação quando atinge 100%
-      if (progress >= 100) {
-        clearInterval(interval);  // Interrompe o intervalo quando atingir 100%
-        enviarParaServidor(frames); // Envia o GIF gerado
+      // Após atingir 80%, a barra estagna
+      if (progress === 80) {
+        clearInterval(interval); // Interrompe o intervalo para não ultrapassar 80%
+        // Aguarda resposta do servidor, aí sim vai para 100%
+        enviarParaServidor(frames);
       }
     }, 100); // A cada 100ms (5 segundos)
-
-		
   }
 }
 
@@ -874,7 +871,7 @@ function enviarParaServidor(frames) {
     const progressBar = document.getElementById("progressBarInner");
     const progressText = document.getElementById("progressPercent");
 
-    let progress = 0;
+    let progress = 80;  // Começamos de 80%, porque até aqui já foi processado
     const interval = setInterval(() => {
       progress += 2; // Incrementa 2% a cada 100ms
       progressBar.style.width = `${progress}%`;
@@ -891,7 +888,6 @@ function enviarParaServidor(frames) {
         `;
       }
     }, 100); // A cada 100ms (5 segundos)
-
   })
   .catch(error => {
     console.error('Erro ao enviar os frames para o servidor:', error);
@@ -899,8 +895,6 @@ function enviarParaServidor(frames) {
   });
 }
 
-
-  
   
   
   
