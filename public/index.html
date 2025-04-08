@@ -887,10 +887,27 @@ function enviarParaServidor(frames) {
         habilitarControles();
 
         // Destacar o link de download com efeito de borda explosiva
-        gifDownload.innerHTML = `
-          <p>GIF gerado com sucesso!</p>
-          <a href="${gifUrl}" download="cronometro.gif" class="btn-download pulsante">Baixar GIF</a>
-        `;
+// Alterações no código para resetar a barra de progresso e percentual
+gifDownload.innerHTML = `
+  <p>GIF gerado com sucesso!</p>
+  <a href="${gifUrl}" download="cronometro.gif" class="btn-download pulsante" id="downloadButton">Baixar GIF</a>
+`;
+
+document.getElementById('downloadButton').addEventListener('click', function() {
+  // Resetando a barra de progresso e o percentual
+  const progressBar = document.getElementById("progressBarInner");
+  const progressText = document.getElementById("progressPercent");
+
+  // Zera a barra e o percentual
+  progressBar.style.width = '0%';
+  progressText.textContent = '0%';
+  
+  // Opcional: Você pode dar um destaque no botão de "Baixar GIF" e resetar os outros campos, se necessário
+  const downloadButton = document.getElementById('downloadButton');
+  downloadButton.classList.remove('pulsante');
+  downloadButton.style.backgroundColor = '#6c757d'; // Cor padrão após o clique (opcional)
+});
+
       }
     }, 100); // A cada 100ms (5 segundos)
 
@@ -901,7 +918,7 @@ function enviarParaServidor(frames) {
   });
 }
 
-// Adicionar animação de destaque ao botão
+// Alterações no estilo CSS para o efeito de pulsação e ajuste no espaçamento
 const style = document.createElement('style');
 style.innerHTML = `
   @keyframes pulse {
@@ -920,12 +937,13 @@ style.innerHTML = `
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.2s ease;
     display: inline-block;
-    margin-top: 20px; /* Adicionando o espaçamento acima */
+    margin-top: 10px; /* Reduzido o espaçamento superior */
   }
 
   .pulsante:hover {
     background-color: #0056b3;
     transform: scale(1.05);
+    animation: pulse 1s infinite; /* Pulsação contínua no hover */
   }
 
   /* Efeito de borda pulsante */
@@ -954,10 +972,13 @@ style.innerHTML = `
     top: -125%;
     left: -125%;
   }
+
+  /* Ajustando o espaçamento entre o texto e o botão */
+  #gifDownload p {
+    margin-bottom: 10px; /* Reduzido o espaço entre o texto e o botão */
+  }
 `;
 document.head.appendChild(style);
-
-  
   
   
   
