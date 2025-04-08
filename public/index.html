@@ -854,6 +854,8 @@ function iniciarContagem() {
 
 // Função para enviar para o servidor e gerar o GIF
 
+
+
 function enviarParaServidor(frames) {
   fetch('/api/gerar-gif', {
     method: 'POST',
@@ -864,7 +866,6 @@ function enviarParaServidor(frames) {
   })
   .then(response => response.json())
   .then(data => {
-    // A resposta contém a URL do GIF gerado
     const gifUrl = data.url;
 
     // Exibir a barra de progresso enquanto o GIF é gerado
@@ -885,14 +886,11 @@ function enviarParaServidor(frames) {
         // Liberar todos os campos (resetar padrões)
         habilitarControles();
 
-        // Destacar o link de download
+        // Destacar o link de download com efeito de borda explosiva
         gifDownload.innerHTML = `
           <p>GIF gerado com sucesso!</p>
           <a href="${gifUrl}" download="cronometro.gif" class="btn-download pulsante">Baixar GIF</a>
         `;
-        
-        // Estilo para o botão pulsante
-        document.querySelector(".pulsante").style.animation = "pulse 1s infinite"; 
       }
     }, 100); // A cada 100ms (5 segundos)
 
@@ -907,10 +905,11 @@ function enviarParaServidor(frames) {
 const style = document.createElement('style');
 style.innerHTML = `
   @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
+    0% { transform: scale(1); box-shadow: 0 0 5px #007bff; }
+    50% { transform: scale(1.1); box-shadow: 0 0 15px #007bff, 0 0 30px #007bff; }
+    100% { transform: scale(1); box-shadow: 0 0 5px #007bff; }
   }
+
   .pulsante {
     background-color: #007bff;
     color: white;
@@ -919,16 +918,45 @@ style.innerHTML = `
     border-radius: 5px;
     text-align: center;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: inline-block;
+    margin-top: 20px; /* Adicionando o espaçamento acima */
   }
+
   .pulsante:hover {
     background-color: #0056b3;
+    transform: scale(1.05);
+  }
+
+  /* Efeito de borda pulsante */
+  .pulsante {
+    border: 3px solid #007bff;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pulsante:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300%;
+    height: 300%;
+    background: rgba(0, 123, 255, 0.5);
+    transition: width 0.5s, height 0.5s, top 0.5s, left 0.5s;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .pulsante:hover:before {
+    width: 350%;
+    height: 350%;
+    top: -125%;
+    left: -125%;
   }
 `;
 document.head.appendChild(style);
 
-  
-  
   
   
   
