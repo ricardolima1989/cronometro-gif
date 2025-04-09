@@ -789,22 +789,32 @@ function enviarParaServidor(frames) {
   const progressBar = document.getElementById("progressBarInner");
   const progressText = document.getElementById("progressPercent");
 
-  let progress = 80; // começa de onde a animação anterior parou
+  let progress = 80; // começa onde a barra parou antes
+  const tempoTotal = 120; // segundos (2 minutos)
+  const incremento = (100 - progress) / (tempoTotal * 10); // atualização a cada 100ms
 
-  // Inicia uma barra de progresso fake até 100%
+  let gifUrl = null;
+  let respostaRecebida = false;
+  let barraFinalizada = false;
+
+  // ⏱️ Barra sobe lentamente até 100%
   const fakeProgress = setInterval(() => {
-    progress += 1;
-    if (progress > 100) progress = 100;
+    progress += incremento;
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(fakeProgress);
+      barraFinalizada = true;
+
+      if (respostaRecebida) {
+        mostrarLinkDownload(gifUrl);
+      }
+    }
 
     progressBar.style.width = `${progress}%`;
-    progressText.textContent = `${progress}%`;
+    progressText.textContent = `${Math.floor(progress)}%`;
+  }, 100); // atualiza a cada 100ms
 
-    if (progress === 100) {
-      clearInterval(fakeProgress);
-    }
-  }, 80); // animação suave até 100%
-
-  // Faz o envio real em paralelo (mas não depende disso para mostrar progresso)
+  // 📡 Envia para o servidor normalmente (em paralelo)
   fetch('/api/gerar-gif', {
     method: 'POST',
     headers: {
@@ -814,33 +824,39 @@ function enviarParaServidor(frames) {
   })
   .then(response => response.json())
   .then(data => {
-    const gifUrl = data.url;
+    gifUrl = data.url;
+    respostaRecebida = true;
 
-    // Atualiza interface com link de download
-    gifDownload.innerHTML = `
-      <p>GIF gerado com sucesso!</p>
-      <a href="${gifUrl}" download="cronometro.gif" class="btn-download pulsante" id="downloadButton">Baixar GIF</a>
-    `;
-
-    document.getElementById('downloadButton').addEventListener('click', () => {
-      // Reseta a barra de progresso visual ao clicar
-      progressBar.style.width = '0%';
-      progressText.textContent = '0%';
-
-      const btn = document.getElementById('downloadButton');
-      btn.classList.remove('pulsante');
-      btn.style.backgroundColor = '#6c757d';
-    });
-
-    // Habilita os campos de novo
-    habilitarControles();
+    if (barraFinalizada) {
+      mostrarLinkDownload(gifUrl);
+    }
   })
   .catch(error => {
     console.error('Erro ao enviar os frames para o servidor:', error);
     alert('Erro ao gerar o GIF. Tente novamente.');
     habilitarControles();
   });
+
+  // 🟢 Quando tudo estiver pronto, exibe o link
+  function mostrarLinkDownload(gifUrl) {
+    gifDownload.innerHTML = `
+      <p>GIF gerado com sucesso!</p>
+      <a href="${gifUrl}" download="cronometro.gif" class="btn-download pulsante" id="downloadButton">Baixar GIF</a>
+    `;
+
+    document.getElementById('downloadButton').addEventListener('click', () => {
+      progressBar.style.width = '0%';
+      progressText.textContent = '0%';
+      const btn = document.getElementById('downloadButton');
+      btn.classList.remove('pulsante');
+      btn.style.backgroundColor = '#6c757d';
+    });
+
+    habilitarControles();
+  }
 }
+
+
 
 
 function cancelProcess() {
