@@ -554,16 +554,22 @@ function desabilitarControles() {
 
 function habilitarControles() {
   document.querySelectorAll(".container input, .container select, .container button")
-          .forEach(el => el.disabled = false);
+          .forEach(el => {
+            // Não reabilita o botão de cancelar
+            if (el.id !== "cancelButton") el.disabled = false;
+          });
+
   if (document.getElementById("fundoTransparente").checked) {
     document.getElementById("corFundo").disabled = true;
     document.getElementById("hexFundo").disabled = true;
   }
+
   if (document.getElementById("sombraTransparente").checked) {
     document.getElementById("corSombra").disabled = true;
     document.getElementById("hexSombra").disabled = true;
   }
 }
+
 
 function atualizarCampo(tipo) {
   if (document.getElementById(`cor${capitalize(tipo)}`) && document.getElementById(`hex${capitalize(tipo)}`)) {
@@ -947,15 +953,47 @@ let cancelRequested = false; // ← DECLARAÇÃO GLOBAL AQUI
 
 
 
-
-// Função para cancelamento
 function cancelProcess() {
-  cancelRequested = true;  // Marca que o processo foi cancelado
-  habilitarControles();    // Habilita os controles novamente
+  cancelRequested = true;
   status.textContent = "Processo cancelado!";
-  document.getElementById("cancelButton").style.display = "none"; // ← esconde o botão
+  document.getElementById("cancelButton").style.display = "none";
   gifDownload.innerHTML = "<p>O processo foi cancelado.</p>";
+  desabilitarControles();
+
+  // A barra de progresso entra em modo de cancelamento
+  const progressBar = document.getElementById("progressBarInner");
+  const progressText = document.getElementById("progressPercent");
+
+  // Estilo vermelho com degradê
+  progressBar.style.background = "linear-gradient(90deg, #dc3545, #ff6b6b)";
+  progressBar.style.width = "0%";
+  progressText.textContent = "0%";
+
+  let progress = 0;
+  const cancelAnimation = setInterval(() => {
+    progress += 5;
+    progressBar.style.width = `${progress}%`;
+    progressText.textContent = `${progress}%`;
+
+    if (progress >= 100) {
+      clearInterval(cancelAnimation);
+      setTimeout(() => {
+        // Volta para o estilo padrão (verde)
+        progressBar.style.width = "0%";
+        progressText.textContent = "0%";
+        progressBar.style.background = "linear-gradient(90deg, #28a745, #45c46a)";
+      }, 400); // aguarda 400ms para reset visual
+    }
+  }, 40); // animação suave até 100%
+  
+    progressBar.style.background = "linear-gradient(90deg, #dc3545, #ff6b6b)";
+  progressBar.style.width = "0%";
+  progressText.textContent = "0%";
+  
 }
+
+
+
 
 
 /* ================= RESETAR PADRÕES ================= */
