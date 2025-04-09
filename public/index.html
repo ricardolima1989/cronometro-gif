@@ -1021,7 +1021,6 @@ function desenharFrame(progresso, tempoRestante) {
     const cor      = document.getElementById("hexFundoContorno").value;
     const grossura = +document.getElementById("grossuraFundoContorno").value;
     const tipo     = document.getElementById("tipoFundoContorno").value;
-	ctx.setLineDash([])
     ctx.beginPath();
     ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
     ctx.strokeStyle = cor;
@@ -1031,7 +1030,6 @@ function desenharFrame(progresso, tempoRestante) {
 
   // Borda
   if (corBorda !== "transparent") {
-  ctx.setLineDash([]);
     ctx.beginPath();
     ctx.setLineDash([]);
     ctx.arc(centro, centro, raio, 0, 2 * Math.PI);
@@ -1049,9 +1047,8 @@ function desenharFrame(progresso, tempoRestante) {
     const cor      = document.getElementById("hexBordaContorno").value;
     const grossura = +document.getElementById("grossuraBordaContorno").value;
     const tipo     = document.getElementById("tipoBordaContorno").value;
-	ctx.setLineDash([]);
     ctx.beginPath();
-    ctx.setLineDash([]);
+    ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
     ctx.arc(centro, centro, raio, 0, 2 * Math.PI);
     ctx.strokeStyle = cor;
     ctx.lineWidth   = grossura;
@@ -1060,9 +1057,8 @@ function desenharFrame(progresso, tempoRestante) {
 
   // Círculo progressivo
   if (corCirculo !== "transparent") {
-  ctx.setLineDash([]);
     ctx.beginPath();
-    ctx.setLineDash([]);
+    ctx.setLineDash(tipoTraco === "dashed" ? [10,10] : tipoTraco === "dotted" ? [2,6] : []);
     ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
     ctx.strokeStyle   = corCirculo;
     ctx.lineCap = "round";  // Isso adiciona o arredondamento nas pontas da barra
@@ -1079,9 +1075,8 @@ function desenharFrame(progresso, tempoRestante) {
     const cor      = document.getElementById("hexCirculoContorno").value;
     const grossura = +document.getElementById("grossuraCirculoContorno").value;
     const tipo     = document.getElementById("tipoCirculoContorno").value;
-	ctx.setLineDash([]);
     ctx.beginPath();
-    ctx.setLineDash([]);
+    ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
     ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
     ctx.strokeStyle = cor;
     ctx.lineWidth   = grossura;
@@ -1104,7 +1099,6 @@ function desenharFrame(progresso, tempoRestante) {
     const cor      = document.getElementById("hexTextoContorno").value;
     const grossura = +document.getElementById("grossuraTextoContorno").value;
     const tipo     = document.getElementById("tipoTextoContorno").value;
-	ctx.setLineDash([]);
     ctx.beginPath();
     ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
     ctx.strokeStyle = cor;
@@ -1443,6 +1437,8 @@ function resetarPadroes() {
 </script>
 
 <script>
+
+
 let intervaloPreview = null;
 let emPreview = false;
 
@@ -1453,37 +1449,37 @@ document.getElementById("mostrarPreview").addEventListener("click", (e) => {
   const aviso = document.getElementById("avisoPreview");
 
   if (!emPreview) {
-    // Inicia o preview
+    // Inicia o preview imediatamente
     const tempoPreview = parseInt(document.getElementById("initialTime").value) || 30;
     let tempoRestante = tempoPreview;
 
-    // Mostrar aviso com fade-in
-mostrarAviso("Teste iniciando...");
+    mostrarAviso("Teste iniciando...");
 
-    link.innerHTML = "<br>⛔ Parar o teste ⛔";
+	link.innerHTML = `<br><span style="color:red; font-weight:bold;">Não terá lag</span>, isso é só uma demonstração <br><span style="color:red; font-weight:bold;">⛔ Parar o teste ⛔</span>`;
+
     emPreview = true;
 
+    desenharFrame(0, tempoRestante);
+
+    intervaloPreview = setInterval(() => {
+      if (tempoRestante <= 0) {
+        clearInterval(intervaloPreview);
+        emPreview = false;
+        link.innerHTML = "<br>🔁 Mostrar somente o timer funcionando";
+        return;
+      }
+      desenharFrame(1 - tempoRestante / tempoPreview, tempoRestante);
+      tempoRestante--;
+    }, 1000);
+
+    // Oculta o aviso depois de 2s sem afetar o timer
     setTimeout(() => {
       aviso.classList.remove("show");
       aviso.classList.add("hide");
-
       setTimeout(() => {
         aviso.style.display = "none";
       }, 2000);
-
-      desenharFrame(0, tempoRestante);
-
-      intervaloPreview = setInterval(() => {
-        if (tempoRestante <= 0) {
-          clearInterval(intervaloPreview);
-          emPreview = false;
-          link.innerHTML = "<br>🔁 Mostrar somente o timer funcionando";
-          return;
-        }
-        desenharFrame(1 - tempoRestante / tempoPreview, tempoRestante);
-        tempoRestante--;
-      }, 1000);
-    }, 2000); // mostra o aviso por 2s
+    }, 2000);
 
   } else {
     // Parar o preview
@@ -1491,11 +1487,66 @@ mostrarAviso("Teste iniciando...");
     const valorOriginal = parseInt(document.getElementById("initialTime").value) || 30;
     tempoTotal = valorOriginal;
 
-    desenharFrame(0, valorOriginal); // volta ao original
-    link.innerHTML = "<br>🔁Mostrar somente o timer funcionando";
+    desenharFrame(0, valorOriginal);
+    link.innerHTML = "<br>🔁 Mostrar somente o timer funcionando";
     emPreview = false;
   }
 });
+
+
+
+
+</script>
+
+<script>
+const botaoPreview = document.getElementById("mostrarPreview");
+
+  mostrarAviso("Iniciando contagem...");
+  desabilitarControles();
+  cancelRequested = false;
+  status.textContent = "Contando...";
+  gifDownload.innerHTML = "<p>Contando...</p>";
+  document.getElementById("cancelButton").style.display = "inline-block";
+  document.getElementById("cancelButton").disabled = false;
+
+  const tempoTotalSegundos = tempoTotal;
+  let startTime = null;
+
+  function animationLoop(timestamp) {
+    if (cancelRequested) {
+      status.textContent = "Processo cancelado!";
+      gifDownload.innerHTML = "<p>O processo foi cancelado.</p>";
+      habilitarControles();
+      return;
+    }
+
+    if (!startTime) startTime = timestamp;
+    const elapsed = (timestamp - startTime) / 1000;
+    let tempoRestante = tempoTotalSegundos - elapsed;
+    if (tempoRestante < 0) tempoRestante = 0;
+    const progresso = elapsed / tempoTotalSegundos;
+
+    desenharFrame(progresso, Math.floor(tempoRestante));
+
+    if (elapsed < tempoTotalSegundos) {
+      requestAnimationFrame(animationLoop);
+    } else {
+      desenharFrame(1, 0);
+      status.textContent = "Contagem finalizada.";
+      gifDownload.innerHTML = "<p>Contagem finalizada.</p>";
+      botaoPreview.style.pointerEvents = "auto";
+      botaoPreview.style.opacity = "1";
+      habilitarControles();
+      document.getElementById("cancelButton").style.display = "none";
+    }
+  }
+
+  requestAnimationFrame(animationLoop);
+}
+
+
+
+
 </script>
 
 
