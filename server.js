@@ -8,7 +8,7 @@ const { createCanvas, loadImage } = require('canvas');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.json({ limit: '5000mb' }));
 app.use(express.static('public'));
 
 /* ========= ROTA PRINCIPAL ========= */
