@@ -262,8 +262,142 @@ button:disabled {
   font-weight: bold; /* Deixa mais destacado */
 }
 
+#initialTime.error {
+  border: 2px solid red;
+  background-color: #ffe6e6;
+}
+
+.dica-erro {
+  color: red;
+  font-size: 12px;
+  display: none;
+  margin-top: 4px;
+}
+
+
+.secao h2:hover {
+  background-color: #f0f8ff;
+  border-radius: 6px;
+  padding: 6px;
+  transition: background-color 0.3s ease;
+}
+
+
+/* Caixa suave com animações */
+.fade-box {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #e6f5ff; /* azul claro moderno */
+  padding: 30px 40px;
+  border-radius: 14px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+  text-align: center;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 2s ease;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.fade-box.show {
+  display: block;
+  opacity: 1;
+}
+
+.fade-box.hide {
+  opacity: 0;
+  transition: opacity 2s ease;
+}
+
+/* Texto dentro da caixa */
+.fade-box .mensagem {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #005f87;
+}
+
+/* Loader circular */
+.loader {
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid #28a745;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+#avisoPreview {
+  display: none;
+  opacity: 0;
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fffbe6;
+  color: #ff8c00;
+  padding: 20px 30px;
+  font-size: 18px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  font-weight: bold;
+  z-index: 9999;
+  transition: opacity 2s ease;
+}
+
+#avisoPreview.show {
+  opacity: 1;
+}
+
+#avisoPreview.hide {
+  opacity: 0;
+}
+
+#avisoPreview .spinner {
+  margin: 10px auto 0 auto;
+  width: 24px;
+  height: 24px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #ff9900;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  display: block;
+}
+
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+
+
+
+
 
   </style>
+  
+  
+  
+  <script>
+  // Bloqueia o aviso apenas na primeira execução automática
+  let bloquearAvisoInicial = true;
+</script>
+
+  
+  
+  
 </head>
 <body>
 
@@ -282,7 +416,8 @@ button:disabled {
     <span style="color: red; font-weight: bold; font-size: 13px;">👇 Comece por aqui!</span>
     <div class="grupo">
       <label for="initialTime">Defina o tempo inicial (segundos):</label>
-      <input type="number" id="initialTime" value="30" min="1" />
+	  <small id="dicaErro" class="dica-erro">Digite apenas números</small>
+      <input type="text" id="initialTime" value="30" inputmode="numeric" pattern="[0-9]*" />
     </div>
   </div>
 </div>
@@ -591,10 +726,27 @@ button:disabled {
       <div class="secao">
         <canvas id="canvas" width="500" height="500"
         style="width:300px;height:300px;"></canvas>
-        <p style="margin-top: 12px;">Pré-visualização</p>
+  
+  
+<a href="#" id="mostrarPreview" style="font-size: 14px; color: #007bff; text-decoration: none; pointer-events: auto; opacity: 1;">
+<br>
+  🔁 Mostrar somente o timer funcionando
+</a>
+
+
+<div id="avisoPreview" class="fade-box">
+  <div class="mensagem">Teste iniciando...</div>
+  <div class="loader"></div>
+</div>
+
+
+
+  
+  
+  
       </div>
       <div class="secao">
-        <h2>GIF Final para Download</h2>
+        <h3>GIF Final para Download</h3>
         <div id="gifDownload">
           <p>Aguardando...</p>
 		  
@@ -636,37 +788,60 @@ button:disabled {
     
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const secoes = document.querySelectorAll(".secao");
+  // Accordion das seções
+  const secoes = document.querySelectorAll(".secao");
 
-    secoes.forEach((secao, index) => {
-      const titulo = secao.querySelector("h2");
-      const conteudo = secao.querySelector(".conteudo-secao");
+  secoes.forEach((secao, index) => {
+    const titulo = secao.querySelector("h2");
+    const conteudo = secao.querySelector(".conteudo-secao");
 
-      // Define estado inicial
-      if (index === 0) {
-        secao.classList.add("aberta");
-      } else {
-        secao.classList.add("fechada");
-      }
+    // Define estado inicial
+    if (index === 0) {
+      secao.classList.add("aberta");
+    } else {
+      secao.classList.add("fechada");
+    }
 
-      // Clique para alternar
-      titulo.addEventListener("click", () => {
-        const isAberta = secao.classList.contains("aberta");
+    // Clique para alternar
+    titulo?.addEventListener("click", () => {
+      const isAberta = secao.classList.contains("aberta");
 
-        // Fecha todas
-        secoes.forEach(s => {
-          s.classList.remove("aberta");
-          s.classList.add("fechada");
-        });
-
-        // Abre se não estava aberta
-        if (!isAberta) {
-          secao.classList.remove("fechada");
-          secao.classList.add("aberta");
-        }
+      // Fecha todas
+      secoes.forEach(s => {
+        s.classList.remove("aberta");
+        s.classList.add("fechada");
       });
+
+      // Abre se não estava aberta
+      if (!isAberta) {
+        secao.classList.remove("fechada");
+        secao.classList.add("aberta");
+      }
     });
   });
+
+  // Validação do campo só números
+  const inputTimer = document.getElementById("initialTime");
+  const dicaErro = document.getElementById("dicaErro");
+
+  inputTimer.addEventListener("input", () => {
+    const valor = inputTimer.value;
+
+    if (/^\d*$/.test(valor)) {
+      inputTimer.classList.remove("error");
+      dicaErro.style.display = "none";
+    } else {
+      inputTimer.classList.add("error");
+      dicaErro.style.display = "block";
+    }
+  });
+
+  // Inicializa preview
+  tempoTotal = +document.getElementById("initialTime").value || 30;
+  resetarPadroes();
+  desenharFrame(0, tempoTotal);
+});
+
 </script>
 
 
@@ -772,7 +947,10 @@ function toggleSombra() {
   desenharFrame(0, tempoTotal);
 }
 
-["Circulo", "Borda", "Texto", "Fundo", "Sombra", "TextoContorno"].forEach(tipo => {
+["Circulo", "Borda", "Texto", "Fundo", "Sombra",
+ "TextoContorno", "CirculoContorno", "BordaContorno", "FundoContorno"
+].forEach(tipo => {
+
   document.getElementById(`cor${tipo}`).addEventListener("input", e => {
     document.getElementById(`hex${tipo}`).value = e.target.value;
     desenharFrame(0, tempoTotal);
@@ -782,6 +960,7 @@ function toggleSombra() {
     desenharFrame(0, tempoTotal);
   });
 });
+
 
 /* ======== LISTENERS DE SLIDERS E SELECTS ======== */
 const binds = [
@@ -842,6 +1021,7 @@ function desenharFrame(progresso, tempoRestante) {
     const cor      = document.getElementById("hexFundoContorno").value;
     const grossura = +document.getElementById("grossuraFundoContorno").value;
     const tipo     = document.getElementById("tipoFundoContorno").value;
+	ctx.setLineDash([])
     ctx.beginPath();
     ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
     ctx.strokeStyle = cor;
@@ -851,6 +1031,7 @@ function desenharFrame(progresso, tempoRestante) {
 
   // Borda
   if (corBorda !== "transparent") {
+  ctx.setLineDash([]);
     ctx.beginPath();
     ctx.setLineDash([]);
     ctx.arc(centro, centro, raio, 0, 2 * Math.PI);
@@ -868,8 +1049,9 @@ function desenharFrame(progresso, tempoRestante) {
     const cor      = document.getElementById("hexBordaContorno").value;
     const grossura = +document.getElementById("grossuraBordaContorno").value;
     const tipo     = document.getElementById("tipoBordaContorno").value;
+	ctx.setLineDash([]);
     ctx.beginPath();
-    ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
+    ctx.setLineDash([]);
     ctx.arc(centro, centro, raio, 0, 2 * Math.PI);
     ctx.strokeStyle = cor;
     ctx.lineWidth   = grossura;
@@ -878,8 +1060,9 @@ function desenharFrame(progresso, tempoRestante) {
 
   // Círculo progressivo
   if (corCirculo !== "transparent") {
+  ctx.setLineDash([]);
     ctx.beginPath();
-    ctx.setLineDash(tipoTraco === "dashed" ? [10,10] : tipoTraco === "dotted" ? [2,6] : []);
+    ctx.setLineDash([]);
     ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
     ctx.strokeStyle   = corCirculo;
     ctx.lineCap = "round";  // Isso adiciona o arredondamento nas pontas da barra
@@ -896,8 +1079,9 @@ function desenharFrame(progresso, tempoRestante) {
     const cor      = document.getElementById("hexCirculoContorno").value;
     const grossura = +document.getElementById("grossuraCirculoContorno").value;
     const tipo     = document.getElementById("tipoCirculoContorno").value;
+	ctx.setLineDash([]);
     ctx.beginPath();
-    ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
+    ctx.setLineDash([]);
     ctx.arc(centro, centro, raio, anguloInicio, anguloFim);
     ctx.strokeStyle = cor;
     ctx.lineWidth   = grossura;
@@ -920,6 +1104,7 @@ function desenharFrame(progresso, tempoRestante) {
     const cor      = document.getElementById("hexTextoContorno").value;
     const grossura = +document.getElementById("grossuraTextoContorno").value;
     const tipo     = document.getElementById("tipoTextoContorno").value;
+	ctx.setLineDash([]);
     ctx.beginPath();
     ctx.setLineDash(tipo === "dashed" ? [10,10] : tipo === "dotted" ? [2,6] : []);
     ctx.strokeStyle = cor;
@@ -932,11 +1117,22 @@ function desenharFrame(progresso, tempoRestante) {
 
 function iniciarContagem() {
  
+  
+  
+	// Desativa o botão de preview durante geração do GIF
+	const botaoPreview = document.getElementById("mostrarPreview");
+	botaoPreview.style.pointerEvents = "none";
+	botaoPreview.style.opacity = "0.4";
+  
+  mostrarAviso("Iniciando geração do GIF...");
   desabilitarControles();
   frames = [];
   cancelRequested = false;
-  document.getElementById("cancelButton").disabled = false; // ← HABILITA O BOTÃO
-  document.getElementById("cancelButton").style.display = "inline-block"; // ← MOSTRA O BOTÃO
+  document.getElementById("cancelButton").disabled = false;
+  document.getElementById("cancelButton").style.display = "inline-block";
+  
+  
+  
   const tempoTotalSegundos = tempoTotal;
   status.textContent = "Contando...";
   gifDownload.innerHTML = "<p>Contando...</p>";
@@ -1036,6 +1232,9 @@ function enviarParaServidor(frames) {
   <a href="${gifUrl}" download="cronometro.gif" class="btn-download pulsante">Baixar GIF</a>
 `;
 
+botaoPreview.style.pointerEvents = "auto";
+botaoPreview.style.opacity = "1";
+
 document.querySelector(".btn-download").addEventListener("click", () => {
   document.getElementById("cancelButton").style.display = "none";
 
@@ -1104,6 +1303,12 @@ let cancelRequested = false; // ← DECLARAÇÃO GLOBAL AQUI
 
 
 function cancelProcess() {
+// Reativa o botão de preview após cancelamento
+const botaoPreview = document.getElementById("mostrarPreview");
+botaoPreview.style.pointerEvents = "auto";
+botaoPreview.style.opacity = "1";
+
+  mostrarAviso("Cancelando processo...");
   cancelRequested = true;
   status.textContent = "Processo cancelado!";
   document.getElementById("cancelButton").style.display = "none";
@@ -1143,6 +1348,7 @@ function cancelProcess() {
 
 /* ================= RESETAR PADRÕES ================= */
 function resetarPadroes() {
+  mostrarAviso("Redefinindo para os padrões...");
   // Definir valores padrão para os elementos
   document.getElementById("initialTime").value = 30;
   tempoTotal = 30;
@@ -1233,18 +1439,90 @@ function resetarPadroes() {
   document.getElementById("progressBarInner").style.background = "linear-gradient(90deg, #28a745, #45c46a)";
   document.getElementById("progressPercent").textContent = "0%";
 
-}
+};
+</script>
 
-/* ================== INICIALIZAÇÃO ================== */
-document.addEventListener("DOMContentLoaded", () => {
-  // Inicializa a página com as configurações padrão
-  tempoTotal = +document.getElementById("initialTime").value || 30;
-  resetarPadroes(); // Aplica as configurações padrão imediatamente
-  desenharFrame(0, tempoTotal);
+<script>
+let intervaloPreview = null;
+let emPreview = false;
+
+document.getElementById("mostrarPreview").addEventListener("click", (e) => {
+  e.preventDefault();
+
+  const link = document.getElementById("mostrarPreview");
+  const aviso = document.getElementById("avisoPreview");
+
+  if (!emPreview) {
+    // Inicia o preview
+    const tempoPreview = parseInt(document.getElementById("initialTime").value) || 30;
+    let tempoRestante = tempoPreview;
+
+    // Mostrar aviso com fade-in
+mostrarAviso("Teste iniciando...");
+
+    link.innerHTML = "<br>⛔ Parar o teste ⛔";
+    emPreview = true;
+
+    setTimeout(() => {
+      aviso.classList.remove("show");
+      aviso.classList.add("hide");
+
+      setTimeout(() => {
+        aviso.style.display = "none";
+      }, 2000);
+
+      desenharFrame(0, tempoRestante);
+
+      intervaloPreview = setInterval(() => {
+        if (tempoRestante <= 0) {
+          clearInterval(intervaloPreview);
+          emPreview = false;
+          link.innerHTML = "<br>🔁 Mostrar somente o timer funcionando";
+          return;
+        }
+        desenharFrame(1 - tempoRestante / tempoPreview, tempoRestante);
+        tempoRestante--;
+      }, 1000);
+    }, 2000); // mostra o aviso por 2s
+
+  } else {
+    // Parar o preview
+    clearInterval(intervaloPreview);
+    const valorOriginal = parseInt(document.getElementById("initialTime").value) || 30;
+    tempoTotal = valorOriginal;
+
+    desenharFrame(0, valorOriginal); // volta ao original
+    link.innerHTML = "<br>🔁Mostrar somente o timer funcionando";
+    emPreview = false;
+  }
 });
 </script>
 
 
+<script>
+function mostrarAviso(texto) {
+  // Bloqueia o aviso somente na inicialização
+  if (bloquearAvisoInicial) {
+    bloquearAvisoInicial = false; // libera para os próximos avisos
+    return;
+  }
+
+  const aviso = document.getElementById("avisoPreview");
+  aviso.innerHTML = `${texto}<div class="spinner"></div>`;
+  aviso.classList.remove("hide");
+  aviso.classList.add("show");
+  aviso.style.display = "block";
+
+  setTimeout(() => {
+    aviso.classList.remove("show");
+    aviso.classList.add("hide");
+    setTimeout(() => {
+      aviso.style.display = "none";
+    }, 2000);
+  }, 2000);
+}
+
+</script>
 
 
 
