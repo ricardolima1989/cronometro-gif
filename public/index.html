@@ -519,10 +519,19 @@ button:disabled {
   </div>
   
   
- 
- 
- 
- 
+  <script>
+  
+  /* ================== INICIALIZAÇÃO ================== */
+document.addEventListener("DOMContentLoaded", () => {
+  // Inicializa a página com as configurações padrão
+  tempoTotal = +document.getElementById("initialTime").value || 30;
+  resetarPadroes(); // Aplica as configurações padrão imediatamente
+  desenharFrame(0, tempoTotal);
+});
+</script>
+  
+  
+  
   
   <script>
 /* ====== SETUP DO CANVAS COM ALTA DENSIDADE ====== */
@@ -776,104 +785,26 @@ function desenharFrame(progresso, tempoRestante) {
 
 /* ================== CONTAGEM ================== */
 
-function iniciarContagem() {
- 
-  function iniciarContagem() {
-  desabilitarControles();
-  desativarLinkPreVisualizacao(); // <<< desativa o link ao clicar em "Gerar GIF"
-  frames = [];
-  cancelRequested = false;
-  document.getElementById("cancelButton").disabled = false;
-  const tempoTotalSegundos = tempoTotal;
-  status.textContent = "Contando...";
-  gifDownload.innerHTML = "<p>Contando...</p>";
- 
- 
-
-  let startTime = null;
-  let lastFrameTime = 0;
-  
-  
-  function animationLoop(timestamp) {
-  if (cancelRequested) {
-    status.textContent = "Processo cancelado!";
-    gifDownload.innerHTML = "<p>O processo foi cancelado.</p>";
-    habilitarControles();
-    return;
-  }
-
-  if (!startTime) startTime = timestamp;
-  const elapsed = (timestamp - startTime) / 1000;
-  let tempoRestante = tempoTotalSegundos - elapsed;
-  if (tempoRestante < 0) tempoRestante = 0;
-  const progresso = elapsed / tempoTotalSegundos;
-
-  desenharFrame(progresso, Math.floor(tempoRestante));
-
-  if (timestamp - lastFrameTime >= 50) {
-    frames.push(canvas.toDataURL("image/png"));
-    lastFrameTime = timestamp;
-  }
-
-  gifDownload.innerHTML = `<p>Tempo estimado para finalização: ${Math.floor(tempoRestante)} segundos</p>`;
-
-
-if (elapsed < tempoTotalSegundos) {
-  requestAnimationFrame(animationLoop);
-} else {
-  status.textContent = "Finalizando...";
-  gifDownload.innerHTML = "<p>Finalizando contagem...</p>";
-
-  isCronometroAtivo = false;
-  ativarLinkPreVisualizacao(); // <<< mantém a prévia ativa até a barra completar
-
-  // NÃO chama enviarParaServidor aqui!
-  // Isso vai acontecer dentro do setInterval da barra de progresso
-}
-
-
-
-
-
-    // Passo 2: A função de animação
-    const progressBar = document.getElementById("progressBarInner");
-    const progressText = document.getElementById("progressPercent");
-
-    let progress = 0; // A barra começa em 0%
-
-    // Passo 3: A animação para preencher a barra
-    const interval = setInterval(() => {
-      // Para os primeiros 2 segundos, aumentamos de 0 a 50%
-      if (elapsed <= 2) {
-        progress = (elapsed / 2) * 50; // De 0 a 50% nos primeiros 2 segundos
-      }
-      // De 3 a 5 segundos, aumentamos de 50 a 80%
-      else if (elapsed > 2 && elapsed <= 5) {
-        progress = 50 + ((elapsed - 2) / 3) * 30; // De 50 a 80% nos próximos 3 segundos
-      } else if (elapsed > 5) {
-        progress = 80;  // A barra vai parar em 80% depois dos 5 segundos
-      }
-
-      // Atualiza a barra de progresso
-      progressBar.style.width = `${progress}%`;
-      progressText.textContent = `${Math.floor(progress)}%`;
-
-      // Após atingir 80%, a barra estagna
-      if (progress >= 80) {
-        clearInterval(interval); // Interrompe o intervalo para não ultrapassar 80%
-        
-        // Aguarda resposta do servidor, aí sim vai para 100%
-        enviarParaServidor(frames);
-      }
-    }, 100); // A cada 100ms (5 segundos)
-  }
-}
-
-// Função para enviar para o servidor e gerar o GIF
-
-
-
 function enviarParaServidor(frames) {
+  const progressBar = document.getElementById("progressBarInner");
+  const progressText = document.getElementById("progressPercent");
+
+  let progress = 80; // começa de onde a animação anterior parou
+
+  // Inicia uma barra de progresso fake até 100%
+  const fakeProgress = setInterval(() => {
+    progress += 1;
+    if (progress > 100) progress = 100;
+
+    progressBar.style.width = `${progress}%`;
+    progressText.textContent = `${progress}%`;
+
+    if (progress === 100) {
+      clearInterval(fakeProgress);
+    }
+  }, 80); // animação suave até 100%
+
+  // Faz o envio real em paralelo (mas não depende disso para mostrar progresso)
   fetch('/api/gerar-gif', {
     method: 'POST',
     headers: {
@@ -885,128 +816,31 @@ function enviarParaServidor(frames) {
   .then(data => {
     const gifUrl = data.url;
 
-    // Exibir a barra de progresso enquanto o GIF é gerado
-    const progressBar = document.getElementById("progressBarInner");
-    const progressText = document.getElementById("progressPercent");
+    // Atualiza interface com link de download
+    gifDownload.innerHTML = `
+      <p>GIF gerado com sucesso!</p>
+      <a href="${gifUrl}" download="cronometro.gif" class="btn-download pulsante" id="downloadButton">Baixar GIF</a>
+    `;
 
-    let progress = 80; // Começa em 80%
+    document.getElementById('downloadButton').addEventListener('click', () => {
+      // Reseta a barra de progresso visual ao clicar
+      progressBar.style.width = '0%';
+      progressText.textContent = '0%';
 
-    const interval = setInterval(() => {
-      progress += 2; // Incrementa 2% a cada 100ms
-      progressBar.style.width = `${progress}%`;
-      progressText.textContent = `${Math.floor(progress)}%`;
+      const btn = document.getElementById('downloadButton');
+      btn.classList.remove('pulsante');
+      btn.style.backgroundColor = '#6c757d';
+    });
 
-      // Finaliza a animação quando atinge 100%
-      if (progress >= 100) {
-        clearInterval(interval);
-
-        // Liberar todos os campos (resetar padrões)
-        habilitarControles();
-
-        // Destacar o link de download com efeito de borda explosiva
-// Alterações no código para resetar a barra de progresso e percentual
-gifDownload.innerHTML = `
-  <p>GIF gerado com sucesso!</p>
-  <a href="${gifUrl}" download="cronometro.gif" class="btn-download pulsante" id="downloadButton">Baixar GIF</a>
-`;
-
-document.getElementById('downloadButton').addEventListener('click', function() {
-  // Resetando a barra de progresso e o percentual
-  const progressBar = document.getElementById("progressBarInner");
-  const progressText = document.getElementById("progressPercent");
-
-  // Zera a barra e o percentual
-  progressBar.style.width = '0%';
-  progressText.textContent = '0%';
-  
-  // Opcional: Você pode dar um destaque no botão de "Baixar GIF" e resetar os outros campos, se necessário
-  const downloadButton = document.getElementById('downloadButton');
-  downloadButton.classList.remove('pulsante');
-  downloadButton.style.backgroundColor = '#6c757d'; // Cor padrão após o clique (opcional)
-});
-
-      }
-    }, 100); // A cada 100ms (5 segundos)
-
+    // Habilita os campos de novo
+    habilitarControles();
   })
   .catch(error => {
     console.error('Erro ao enviar os frames para o servidor:', error);
     alert('Erro ao gerar o GIF. Tente novamente.');
+    habilitarControles();
   });
 }
-
-// Alterações no estilo CSS para o efeito de pulsação e ajuste no espaçamento
-const style = document.createElement('style');
-style.innerHTML = `
-  @keyframes pulse {
-    0% { transform: scale(1); box-shadow: 0 0 5px #007bff; }
-    50% { transform: scale(1.1); box-shadow: 0 0 15px #007bff, 0 0 30px #007bff; }
-    100% { transform: scale(1); box-shadow: 0 0 5px #007bff; }
-  }
-
-  .pulsante {
-    background-color: #007bff;
-    color: white;
-    font-weight: bold;
-    padding: 14px 20px;
-    border-radius: 5px;
-    text-align: center;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    display: inline-block;
-    margin-top: 10px; /* Reduzido o espaçamento superior */
-  }
-
-  .pulsante:hover {
-    background-color: #0056b3;
-    transform: scale(1.05);
-    animation: pulse 1s infinite; /* Pulsação contínua no hover */
-  }
-
-  /* Efeito de borda pulsante */
-  .pulsante {
-    border: 3px solid #007bff;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .pulsante:before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 300%;
-    height: 300%;
-    background: rgba(0, 123, 255, 0.5);
-    transition: width 0.5s, height 0.5s, top 0.5s, left 0.5s;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-  }
-
-  .pulsante:hover:before {
-    width: 350%;
-    height: 350%;
-    top: -125%;
-    left: -125%;
-  }
-
-  /* Ajustando o espaçamento entre o texto e o botão */
-  #gifDownload p {
-    margin-bottom: 10px; /* Reduzido o espaço entre o texto e o botão */
-  }
-`;
-document.head.appendChild(style);
-  
-  
-  
-  
-  
-  
-
-  requestAnimationFrame(animationLoop);
-}
-
-let cancelRequested = false; // ← DECLARAÇÃO GLOBAL AQUI
 
 
 function cancelProcess() {
@@ -1146,8 +980,6 @@ document.addEventListener("DOMContentLoaded", () => {
   desenharFrame(0, tempoTotal);
 });
 </script>
-
-
 
 
 <script>
