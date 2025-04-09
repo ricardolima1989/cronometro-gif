@@ -226,76 +226,293 @@ button:disabled {
 }
 
 
+    .secao h2 {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 20px;
+  }
+
+  .secao h2::after {
+    content: "▼";
+    position: absolute;
+    right: 10px;
+    font-size: 12px;
+    transition: transform 0.3s ease;
+  }
+
+  .secao.fechada h2::after {
+    transform: rotate(-90deg);
+  }
+
+  .conteudo-secao {
+    display: none;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .secao.aberta .conteudo-secao {
+    display: block;
+  }
+
+
 
   </style>
 </head>
 <body>
+
+
   <div class="container">
     <h1>Cronômetro com GIF via Servidor</h1>
     
     <!-- Coluna 1: Timer, Círculo e Borda -->
     <div class="col">
-      <!-- Valor Inicial do Timer -->
-      <div class="secao destaque">
-        <h2>Valor Inicial do Timer</h2>
-		<span style="color: red; font-weight: bold; font-size: 13px;">👇 Comece por aqui!</span>
-        <div class="grupo">
-          <label for="initialTime">Defina o tempo inicial (segundos):</label>
-          <input type="number" id="initialTime" value="30" min="1" />
+
+	
+	<!-- A estrutura completa com todas as seções do body em formato accordion -->
+<div class="secao aberta">
+  <h2>Valor Inicial do Timer</h2>
+  <div class="conteudo-secao">
+    <span style="color: red; font-weight: bold; font-size: 13px;">👇 Comece por aqui!</span>
+    <div class="grupo">
+      <label for="initialTime">Defina o tempo inicial (segundos):</label>
+      <input type="number" id="initialTime" value="30" min="1" />
+    </div>
+  </div>
+</div>
+
+<div class="secao fechada">
+  <h2>Configuração do Círculo</h2>
+  <div class="conteudo-secao">
+    <div class="grupo">
+      <div class="linha-check">
+        <input type="checkbox" id="circuloTransparente" onchange="atualizarCampo('circulo')">
+        <label for="circuloTransparente">Círculo transparente</label>
+      </div>
+      <label>Cor do círculo:</label>
+      <div class="linha-color">
+        <input type="color" id="corCirculo" value="#4A90E2" />
+        <input type="text" id="hexCirculo" value="#4A90E2" />
+      </div>
+    </div>
+    <div class="grupo">
+      <label for="grossuraCirculo">Grossura do círculo: <span id="displayGrossuraCirculo">28</span> px</label>
+      <input type="range" id="grossuraCirculo" min="1" max="40" value="28" />
+    </div>
+    <div class="grupo">
+      <div class="linha-check">
+        <input type="checkbox" id="circuloContornoAtivo" onchange="toggleContorno('circulo')">
+        <label for="circuloContornoAtivo">Ativar contorno do círculo</label>
+      </div>
+    </div>
+    <div id="grupoCirculoContorno" style="display: none;">
+      <div class="grupo">
+        <label>Cor do contorno do círculo:</label>
+        <div class="linha-color">
+          <input type="color" id="corCirculoContorno" value="#000000" />
+          <input type="text" id="hexCirculoContorno" value="#000000" />
         </div>
+      </div>
+      <div class="grupo">
+        <label for="grossuraCirculoContorno">Grossura do contorno: <span id="displayGrossuraCirculoContorno">2</span> px</label>
+        <input type="range" id="grossuraCirculoContorno" min="1" max="20" value="2" />
+      </div>
+      <div class="grupo">
+        <label>Tipo de linha:</label>
+        <select id="tipoCirculoContorno">
+          <option value="solid">Sólido</option>
+          <option value="dashed">Tracejado</option>
+          <option value="dotted">Pontilhado</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="secao fechada">
+  <h2>Configuração da Borda</h2>
+  <div class="conteudo-secao">
+    <div class="grupo">
+      <div class="linha-check">
+        <input type="checkbox" id="bordaTransparente" onchange="atualizarCampo('borda')">
+        <label for="bordaTransparente">Borda transparente</label>
+      </div>
+      <label>Cor da borda:</label>
+      <div class="linha-color">
+        <input type="color" id="corBorda" value="#2E2E2E" />
+        <input type="text" id="hexBorda" value="#2E2E2E" />
+      </div>
+    </div>
+    <div class="grupo">
+      <label for="grossuraBorda">
+        Grossura da borda: <span id="displayGrossuraBorda">34</span> px
+      </label>
+      <input type="range" id="grossuraBorda" min="1" max="40" value="34" />
+    </div>
+    <div class="grupo">
+      <div class="linha-check">
+        <input type="checkbox" id="bordaContornoAtivo" onchange="toggleContorno('borda')">
+        <label for="bordaContornoAtivo">Ativar contorno da borda</label>
+      </div>
+    </div>
+    <div id="grupoBordaContorno" style="display: none;">
+      <div class="grupo">
+        <label>Cor do contorno da borda:</label>
+        <div class="linha-color">
+          <input type="color" id="corBordaContorno" value="#000000" />
+          <input type="text" id="hexBordaContorno" value="#000000" />
+        </div>
+      </div>
+      <div class="grupo">
+        <label for="grossuraBordaContorno">
+          Grossura do contorno: <span id="displayGrossuraBordaContorno">2</span> px
+        </label>
+        <input type="range" id="grossuraBordaContorno" min="1" max="20" value="2" />
+      </div>
+      <div class="grupo">
+        <label>Tipo de linha:</label>
+        <select id="tipoBordaContorno">
+          <option value="solid">Sólido</option>
+          <option value="dashed">Tracejado</option>
+          <option value="dotted">Pontilhado</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="secao fechada">
+  <h2>Configuração do Texto</h2>
+  <div class="conteudo-secao">
+    <div class="grupo">
+      <label>Cor do texto:</label>
+      <div class="linha-color">
+        <input type="color" id="corTexto" value="#ffffff" />
+        <input type="text" id="hexTexto" value="#ffffff" />
+      </div>
+    </div>
+    <div class="grupo">
+      <label for="tamanhoTexto">Tamanho do texto: <span id="displayTamanhoTexto">90</span> px</label>
+      <input type="range" id="tamanhoTexto" min="10" max="100" value="90" />
+    </div>
+    <div class="grupo">
+      <div class="linha-check">
+        <input type="checkbox" id="textoContornoAtivo" onchange="toggleContorno('texto')">
+        <label for="textoContornoAtivo">Ativar contorno do texto</label>
+      </div>
+    </div>
+    <div id="grupoTextoContorno" style="display: none;">
+      <div class="grupo">
+        <label>Cor do contorno do texto:</label>
+        <div class="linha-color">
+          <input type="color" id="corTextoContorno" value="#000000" />
+          <input type="text" id="hexTextoContorno" value="#000000" />
+        </div>
+      </div>
+      <div class="grupo">
+        <label for="grossuraTextoContorno">Grossura do contorno: <span id="displayGrossuraTextoContorno">2</span> px</label>
+        <input type="range" id="grossuraTextoContorno" min="1" max="20" value="2" />
+      </div>
+      <div class="grupo">
+        <label>Tipo de linha:</label>
+        <select id="tipoTextoContorno">
+          <option value="solid">Sólido</option>
+          <option value="dashed">Tracejado</option>
+          <option value="dotted">Pontilhado</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="secao fechada">
+  <h2>Configuração do Fundo</h2>
+  <div class="conteudo-secao">
+    <div class="grupo">
+      <div class="linha-check">
+        <input type="checkbox" id="fundoTransparente" checked onchange="atualizarCampo('fundo')">
+        <label for="fundoTransparente">Fundo transparente</label>
+      </div>
+      <label>Cor do fundo:</label>
+      <div class="linha-color">
+        <input type="color" id="corFundo" value="#000000" disabled />
+        <input type="text" id="hexFundo" value="transparent" disabled />
+      </div>
+    </div>
+    <div class="grupo">
+      <div class="linha-check">
+        <input type="checkbox" id="fundoContornoAtivo" onchange="toggleContorno('fundo')">
+        <label for="fundoContornoAtivo">Ativar contorno do fundo</label>
+      </div>
+    </div>
+    <div id="grupoFundoContorno" style="display: none;">
+      <div class="grupo">
+        <label>Cor do contorno do fundo:</label>
+        <div class="linha-color">
+          <input type="color" id="corFundoContorno" value="#000000" />
+          <input type="text" id="hexFundoContorno" value="#000000" />
+        </div>
+      </div>
+      <div class="grupo">
+        <label for="grossuraFundoContorno">Grossura do contorno: <span id="displayGrossuraFundoContorno">2</span> px</label>
+        <input type="range" id="grossuraFundoContorno" min="1" max="20" value="2" />
+      </div>
+      <div class="grupo">
+        <label>Tipo de linha:</label>
+        <select id="tipoFundoContorno">
+          <option value="solid">Sólido</option>
+          <option value="dashed">Tracejado</option>
+          <option value="dotted">Pontilhado</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="secao fechada">
+  <h2>Configuração da Sombra</h2>
+  <div class="conteudo-secao">
+    <div class="grupo">
+      <div class="linha-check">
+        <input type="checkbox" id="sombraTransparente" onchange="toggleSombra()">
+        <label for="sombraTransparente">Sombra transparente</label>
+      </div>
+      <label>Cor da sombra:</label>
+      <div class="linha-color">
+        <input type="color" id="corSombra" value="#000000" />
+        <input type="text" id="hexSombra" value="#000000" />
+      </div>
+    </div>
+    <div id="grupoSombra">
+      <div class="grupo">
+        <label>Intensidade da sombra:</label>
+        <input type="range" id="sombra" min="0" max="30" value="8" />
+      </div>
+      <div class="grupo">
+        <label>Direção da sombra (horizontal):</label>
+        <input type="range" id="sombraX" min="-30" max="30" value="4" />
+      </div>
+      <div class="grupo">
+        <label>Direção da sombra (vertical):</label>
+        <input type="range" id="sombraY" min="-30" max="30" value="4" />
+      </div>
+    </div>
+  </div>
+</div>
+
+	
+		
+	
+	
+      <!-- Valor Inicial do Timer -->
+      <div class="secao destaque" style="display: none;">
       </div>
       <!-- Configuração do Círculo -->
-      <div class="secao">
-        <h2>Configuração do Círculo</h2>
-        <div class="grupo">
-          <div class="linha-check">
-            <input type="checkbox" id="circuloTransparente" onchange="atualizarCampo('circulo')">
-            <label for="circuloTransparente">Círculo transparente</label>
-          </div>
-          <label>Cor do círculo:</label>
-          <div class="linha-color">
-            <input type="color" id="corCirculo" value="#4A90E2" />
-            <input type="text" id="hexCirculo" value="#4A90E2" />
-          </div>
-        </div>
-        <div class="grupo">
-          <label for="grossuraCirculo">
-            Grossura do círculo: <span id="displayGrossuraCirculo">28</span> px
-          </label>
-          <input type="range" id="grossuraCirculo" min="1" max="40" value="28" />
-        </div>
-        <div class="grupo">
-          <div class="linha-check">
-            <input type="checkbox" id="circuloContornoAtivo" onchange="toggleContorno('circulo')">
-            <label for="circuloContornoAtivo">Ativar contorno do círculo</label>
-          </div>
-        </div>
-        <div id="grupoCirculoContorno" style="display: none;">
-          <div class="grupo">
-            <label>Cor do contorno do círculo:</label>
-            <div class="linha-color">
-              <input type="color" id="corCirculoContorno" value="#000000" />
-              <input type="text" id="hexCirculoContorno" value="#000000" />
-            </div>
-          </div>
-          <div class="grupo">
-            <label for="grossuraCirculoContorno">
-              Grossura do contorno: <span id="displayGrossuraCirculoContorno">2</span> px
-            </label>
-            <input type="range" id="grossuraCirculoContorno" min="1" max="20" value="2" />
-          </div>
-          <div class="grupo">
-            <label>Tipo de linha:</label>
-            <select id="tipoCirculoContorno">
-              <option value="solid">Sólido</option>
-              <option value="dashed">Tracejado</option>
-              <option value="dotted">Pontilhado</option>
-            </select>
-          </div>
-        </div>
+      <div class="secao" style="display: none;">
       </div>
       <!-- Configuração da Borda -->
-      <div class="secao">
+      <div class="secao" style="display: none;">
         <h2>Configuração da Borda</h2>
         <div class="grupo">
           <div class="linha-check">
@@ -346,128 +563,8 @@ button:disabled {
       </div>
 	  
 	  <!-- Coluna 2: Texto e Fundo -->
-    <div class="col">
-      <!-- Configuração do Texto -->
-      <div class="secao">
-        <h2>Configuração do Texto</h2>
-        <div class="grupo">
-          <label>Cor do texto:</label>
-          <div class="linha-color">
-            <input type="color" id="corTexto" value="#ffffff" />
-            <input type="text" id="hexTexto" value="#ffffff" />
-          </div>
-        </div>
-        <div class="grupo">
-          <label for="tamanhoTexto">
-            Tamanho do texto: <span id="displayTamanhoTexto">90</span> px
-          </label>
-          <input type="range" id="tamanhoTexto" min="10" max="100" value="90" />
-        </div>
-        <div class="grupo">
-          <div class="linha-check">
-            <input type="checkbox" id="textoContornoAtivo" onchange="toggleContorno('texto')">
-            <label for="textoContornoAtivo">Ativar contorno do texto</label>
-          </div>
-        </div>
-        <div id="grupoTextoContorno" style="display: none;">
-          <div class="grupo">
-            <label>Cor do contorno do texto:</label>
-            <div class="linha-color">
-              <input type="color" id="corTextoContorno" value="#000000" />
-              <input type="text" id="hexTextoContorno" value="#000000" />
-            </div>
-          </div>
-          <div class="grupo">
-            <label for="grossuraTextoContorno">
-              Grossura do contorno: <span id="displayGrossuraTextoContorno">2</span> px
-            </label>
-            <input type="range" id="grossuraTextoContorno" min="1" max="20" value="2" />
-          </div>
-          <div class="grupo">
-            <label>Tipo de linha:</label>
-            <select id="tipoTextoContorno">
-              <option value="solid">Sólido</option>
-              <option value="dashed">Tracejado</option>
-              <option value="dotted">Pontilhado</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <!-- Configuração do Fundo -->
-      <div class="secao">
-        <h2>Configuração do Fundo</h2>
-        <div class="grupo">
-          <div class="linha-check">
-            <input type="checkbox" id="fundoTransparente" checked onchange="atualizarCampo('fundo')">
-            <label for="fundoTransparente">Fundo transparente</label>
-          </div>
-          <label>Cor do fundo:</label>
-          <div class="linha-color">
-            <input type="color" id="corFundo" value="#000000" disabled />
-            <input type="text" id="hexFundo" value="transparent" disabled />
-          </div>
-        </div>
-        <div class="grupo">
-          <div class="linha-check">
-            <input type="checkbox" id="fundoContornoAtivo" onchange="toggleContorno('fundo')">
-            <label for="fundoContornoAtivo">Ativar contorno do fundo</label>
-          </div>
-        </div>
-        <div id="grupoFundoContorno" style="display: none;">
-          <div class="grupo">
-            <label>Cor do contorno do fundo:</label>
-            <div class="linha-color">
-              <input type="color" id="corFundoContorno" value="#000000" />
-              <input type="text" id="hexFundoContorno" value="#000000" />
-            </div>
-          </div>
-          <div class="grupo">
-            <label for="grossuraFundoContorno">
-              Grossura do contorno: <span id="displayGrossuraFundoContorno">2</span> px
-            </label>
-            <input type="range" id="grossuraFundoContorno" min="1" max="20" value="2" />
-          </div>
-          <div class="grupo">
-            <label>Tipo de linha:</label>
-            <select id="tipoFundoContorno">
-              <option value="solid">Sólido</option>
-              <option value="dashed">Tracejado</option>
-              <option value="dotted">Pontilhado</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
-	<!-- Configuração da Sombra -->
-<div class="secao">
-  <h2>Configuração da Sombra</h2>
-  <div class="grupo">
-    <div class="linha-check">
-      <input type="checkbox" id="sombraTransparente" onchange="toggleSombra()">
-      <label for="sombraTransparente">Sombra transparente</label>
-    </div>
-    <label>Cor da sombra:</label>
-    <div class="linha-color">
-      <input type="color" id="corSombra" value="#000000" />
-      <input type="text" id="hexSombra" value="#000000" />
-    </div>
-  </div>
-  <div id="grupoSombra">
-    <div class="grupo">
-      <label>Intensidade da sombra:</label>
-      <input type="range" id="sombra" min="0" max="30" value="8" />
-    </div>
-    <div class="grupo">
-      <label>Direção da sombra (horizontal):</label>
-      <input type="range" id="sombraX" min="-30" max="30" value="4" />
-    </div>
-    <div class="grupo">
-      <label>Direção da sombra (vertical):</label>
-      <input type="range" id="sombraY" min="-30" max="30" value="4" />
-    </div>
-  </div>
-</div>
-	
+    <div class="col" style="display: none;">
+	  </div>	
     </div>
     
  
@@ -503,8 +600,7 @@ button:disabled {
   <div id="progressPercent">0%</div>
 </div>
 		
-		
-      </div>
+
     </div>
 </div>
 
@@ -522,10 +618,52 @@ button:disabled {
 </div>
     
 
+
+
+
+
+
   
   </div>
   
   
+    
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const secoes = document.querySelectorAll(".secao");
+
+    secoes.forEach((secao, index) => {
+      const titulo = secao.querySelector("h2");
+      const conteudo = secao.querySelector(".conteudo-secao");
+
+      // Define estado inicial
+      if (index === 0) {
+        secao.classList.add("aberta");
+      } else {
+        secao.classList.add("fechada");
+      }
+
+      // Clique para alternar
+      titulo.addEventListener("click", () => {
+        const isAberta = secao.classList.contains("aberta");
+
+        // Fecha todas
+        secoes.forEach(s => {
+          s.classList.remove("aberta");
+          s.classList.add("fechada");
+        });
+
+        // Abre se não estava aberta
+        if (!isAberta) {
+          secao.classList.remove("fechada");
+          secao.classList.add("aberta");
+        }
+      });
+    });
+  });
+</script>
+
+
   
   
   <script>
