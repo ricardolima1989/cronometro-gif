@@ -1079,7 +1079,15 @@ function resetarPadroes() {
   document.getElementById("tipoTraco").value = "solid";
 
   // Redesenha preview
+    // Redesenha preview
   desenharFrame(0, tempoTotal);
+
+  // Resetar seção de download
+  gifDownload.innerHTML = "<p>Aguardando...</p>";
+  document.getElementById("progressBarInner").style.width = "0%";
+  document.getElementById("progressBarInner").style.background = "linear-gradient(90deg, #28a745, #45c46a)";
+  document.getElementById("progressPercent").textContent = "0%";
+
 }
 
 /* ================== INICIALIZAÇÃO ================== */
