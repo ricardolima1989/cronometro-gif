@@ -18,7 +18,7 @@
     }
     .container {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 10px;
       width: 100%;
       max-width: 1440px;
@@ -344,9 +344,8 @@ button:disabled {
           </div>
         </div>
       </div>
-    </div>
-    
-    <!-- Coluna 2: Texto e Fundo -->
+	  
+	  <!-- Coluna 2: Texto e Fundo -->
     <div class="col">
       <!-- Configuração do Texto -->
       <div class="secao">
@@ -439,59 +438,52 @@ button:disabled {
         </div>
       </div>
     </div>
-    
-    <!-- Coluna 3: Sombra e Traçado do Círculo -->
-    <div class="col">
-      <!-- Configuração da Sombra -->
-      <div class="secao">
-        <h2>Configuração da Sombra</h2>
-        <div class="grupo">
-          <div class="linha-check">
-            <input type="checkbox" id="sombraTransparente" onchange="toggleSombra()">
-            <label for="sombraTransparente">Sombra transparente</label>
-          </div>
-          <label>Cor da sombra:</label>
-          <div class="linha-color">
-            <input type="color" id="corSombra" value="#000000" />
-            <input type="text" id="hexSombra" value="#000000" />
-          </div>
-        </div>
-        <div id="grupoSombra">
-          <div class="grupo">
-            <label>Intensidade da sombra:</label>
-            <input type="range" id="sombra" min="0" max="30" value="8" />
-          </div>
-          <div class="grupo">
-            <label>Direção da sombra (horizontal):</label>
-            <input type="range" id="sombraX" min="-30" max="30" value="4" />
-          </div>
-          <div class="grupo">
-            <label>Direção da sombra (vertical):</label>
-            <input type="range" id="sombraY" min="-30" max="30" value="4" />
-          </div>
-        </div>
-        <button onclick="iniciarContagem()">Gerar GIF</button>
-		<button id="cancelButton" onclick="cancelProcess()" style="display: none;">Cancelar</button>
-        <button class="btn-reset" onclick="resetarPadroes()">Resetar Padrões</button>
-        <div id="status">Aguardando...</div>
-		
-		
-      </div>
-      <!-- Traçado do Círculo -->
-      <div class="secao">
-        <h2>Traçado do Círculo</h2>
-        <div class="grupo">
-          <label>Tipo de traço do círculo:</label>
-          <select id="tipoTraco">
-            <option value="solid" selected>Sólido</option>
-            <option value="dashed">Tracejado</option>
-            <option value="dotted">Pontilhado</option>
-          </select>
-        </div>
-      </div>
+	<!-- Configuração da Sombra -->
+<div class="secao">
+  <h2>Configuração da Sombra</h2>
+  <div class="grupo">
+    <div class="linha-check">
+      <input type="checkbox" id="sombraTransparente" onchange="toggleSombra()">
+      <label for="sombraTransparente">Sombra transparente</label>
+    </div>
+    <label>Cor da sombra:</label>
+    <div class="linha-color">
+      <input type="color" id="corSombra" value="#000000" />
+      <input type="text" id="hexSombra" value="#000000" />
+    </div>
+  </div>
+  <div id="grupoSombra">
+    <div class="grupo">
+      <label>Intensidade da sombra:</label>
+      <input type="range" id="sombra" min="0" max="30" value="8" />
+    </div>
+    <div class="grupo">
+      <label>Direção da sombra (horizontal):</label>
+      <input type="range" id="sombraX" min="-30" max="30" value="4" />
+    </div>
+    <div class="grupo">
+      <label>Direção da sombra (vertical):</label>
+      <input type="range" id="sombraY" min="-30" max="30" value="4" />
+    </div>
+  </div>
+</div>
+	
     </div>
     
-    <!-- Coluna 4: Pré-visualização e GIF final para download -->
+ 
+
+
+
+
+<!-- Seção: Ações (botões agrupados) -->
+<div class="secao">
+  <button onclick="iniciarContagem()">Gerar GIF</button>
+  <button id="cancelButton" onclick="cancelProcess()" style="display: none;">Cancelar</button>
+  <button class="btn-reset" onclick="resetarPadroes()">Resetar Padrões</button>
+  <div id="status">Aguardando...</div>
+  
+  
+      <!-- Coluna 4: Pré-visualização e GIF final para download -->
     <div class="col preview">
       <div class="secao">
         <canvas id="canvas" width="500" height="500"
@@ -514,6 +506,22 @@ button:disabled {
 		
       </div>
     </div>
+</div>
+
+	
+		
+		
+      <!-- Traçado do Círculo -->
+      <div class="secao">
+        <div style="display:none;">
+  <select id="tipoTraco">
+    <option value="solid" selected>Sólido</option>
+    <option value="dashed">Tracejado</option>
+    <option value="dotted">Pontilhado</option>
+  </select>
+</div>
+    
+
   
   </div>
   
