@@ -892,11 +892,16 @@ function enviarParaServidor(frames) {
         // Liberar todos os campos (resetar padrões)
         habilitarControles();
 
-        // Destacar o link de download
         gifDownload.innerHTML = `
-          <p>GIF gerado com sucesso!</p>
-          <a href="${gifUrl}" download="cronometro.gif" class="btn-download pulsante">Baixar GIF</a>
-        `;
+  <p>GIF gerado com sucesso!</p>
+  <a href="${gifUrl}" download="cronometro.gif" class="btn-download pulsante">Baixar GIF</a>
+`;
+
+// Garante que ao clicar no botão de download, o botão cancelar desaparece
+document.querySelector(".btn-download").addEventListener("click", () => {
+  document.getElementById("cancelButton").style.display = "none";
+});
+
         
         // Estilo para o botão pulsante
         document.querySelector(".pulsante").style.animation = "pulse 1s infinite"; 
