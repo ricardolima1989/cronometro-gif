@@ -958,13 +958,14 @@ function cancelProcess() {
   status.textContent = "Processo cancelado!";
   document.getElementById("cancelButton").style.display = "none";
   gifDownload.innerHTML = "<p>O processo foi cancelado.</p>";
-  desabilitarControles();
 
-  // A barra de progresso entra em modo de cancelamento
+  // Reabilita todos os campos normalmente (preserva as regras da função)
+  habilitarControles();
+
+  // Anima visual de cancelamento na barra de progresso
   const progressBar = document.getElementById("progressBarInner");
   const progressText = document.getElementById("progressPercent");
 
-  // Estilo vermelho com degradê
   progressBar.style.background = "linear-gradient(90deg, #dc3545, #ff6b6b)";
   progressBar.style.width = "0%";
   progressText.textContent = "0%";
@@ -978,18 +979,12 @@ function cancelProcess() {
     if (progress >= 100) {
       clearInterval(cancelAnimation);
       setTimeout(() => {
-        // Volta para o estilo padrão (verde)
         progressBar.style.width = "0%";
         progressText.textContent = "0%";
         progressBar.style.background = "linear-gradient(90deg, #28a745, #45c46a)";
-      }, 400); // aguarda 400ms para reset visual
+      }, 400);
     }
-  }, 40); // animação suave até 100%
-  
-    progressBar.style.background = "linear-gradient(90deg, #dc3545, #ff6b6b)";
-  progressBar.style.width = "0%";
-  progressText.textContent = "0%";
-  
+  }, 40);
 }
 
 
