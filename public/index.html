@@ -471,7 +471,7 @@ button:disabled {
           </div>
         </div>
         <button onclick="iniciarContagem()">Gerar GIF</button>
-		<button id="cancelButton" onclick="cancelProcess()" disabled>Cancelar</button>
+		<button id="cancelButton" onclick="cancelProcess()" style="display: none;">Cancelar</button>
         <button class="btn-reset" onclick="resetarPadroes()">Resetar Padrões</button>
         <div id="status">Aguardando...</div>
 		
@@ -778,6 +778,7 @@ function iniciarContagem() {
   frames = [];
   cancelRequested = false;
   document.getElementById("cancelButton").disabled = false; // ← HABILITA O BOTÃO
+  document.getElementById("cancelButton").style.display = "inline-block"; // ← MOSTRA O BOTÃO
   const tempoTotalSegundos = tempoTotal;
   status.textContent = "Contando...";
   gifDownload.innerHTML = "<p>Contando...</p>";
@@ -952,8 +953,10 @@ function cancelProcess() {
   cancelRequested = true;  // Marca que o processo foi cancelado
   habilitarControles();    // Habilita os controles novamente
   status.textContent = "Processo cancelado!";
+  document.getElementById("cancelButton").style.display = "none"; // ← esconde o botão
   gifDownload.innerHTML = "<p>O processo foi cancelado.</p>";
 }
+
 
 /* ================= RESETAR PADRÕES ================= */
 function resetarPadroes() {
