@@ -904,8 +904,6 @@ body.dark-mode .secao.fechada {
 	}
 
 	
-	
-	
     </style>
 
     <script>
@@ -1331,13 +1329,34 @@ body.dark-mode .secao.fechada {
 
                 <!-- Coluna 4: Pré-visualização e GIF final para download -->
                 <div class="col preview">
-				                        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                            <span>🌟Fundo transparente?➡️</span>
-                            <label class="switch">
-                                <input type="checkbox" id="fundoTransparenteAtalho">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
+				<!-- LINHA 1 -->
+								<div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+								  <span>🌟 Fundo transparente? ➡️</span>
+								  <label class="switch">
+									<input type="checkbox" id="fundoTransparenteAtalho">
+									<span class="slider"></span>
+								  </label>
+								</div>
+								
+								  <!-- LINHA 2: Remover marca d’água -->
+								  <!-- <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;"> -->
+									<!-- <span>💧 Remover marca d’água ➡️</span> -->
+									<!-- <label class="switch"> -->
+									  <!-- <input type="checkbox" id="removerMarcaToggle"> -->
+									  <!-- <span class="slider"></span> -->
+									<!-- </label> -->
+								  <!-- </div> -->
+								  
+								  <div id="linhaRemoverMarca" style="display: none; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+								  <span>💧 Remover marca d’água ➡️</span>
+								  <label class="switch">
+									<input type="checkbox" id="removerMarcaToggle">
+									<span class="slider"></span>
+								  </label>
+								</div>
+
+
+
                     <div class="secao">
                         <canvas id="canvas" width="500" height="500" style="width:300px;height:300px;"></canvas>
 
@@ -1485,12 +1504,14 @@ body.dark-mode .secao.fechada {
                   localStorage.setItem("modoPremium", premiumAtivo); 
                 
                   if (premiumAtivo) {
-                    premiumTexto.textContent = '👑 Você está no modo Premium! ';
-                    canvas.classList.remove("marca-dagua");
-                  } else {
-                    premiumTexto.textContent = '🌟 Seja Premium! ➡️';
-                    canvas.classList.add("marca-dagua");
-                  }
+					  premiumTexto.textContent = '👑 Você está no modo Premium! ';
+					  canvas.classList.remove("marca-dagua");
+					  document.getElementById("linhaRemoverMarca").style.display = "none";
+					} else {
+					  premiumTexto.textContent = '🌟 Seja Premium! ➡️';
+					  canvas.classList.add("marca-dagua");
+					  document.getElementById("linhaRemoverMarca").style.display = "flex";
+					}
                 
                   desenharFrame(0, tempoTotal); 
                 }
@@ -1499,6 +1520,13 @@ body.dark-mode .secao.fechada {
                   const premiumSalvo = localStorage.getItem("modoPremium") === "true";
                   modoPremiumToggle.checked = premiumSalvo;
                   atualizarStatusPremium();
+				  
+				    const linhaRemoverMarca = document.getElementById("linhaRemoverMarca");
+				  if (!premiumSalvo && linhaRemoverMarca) {
+					linhaRemoverMarca.style.display = "flex";
+				  } else if (linhaRemoverMarca) {
+					linhaRemoverMarca.style.display = "none";
+				  }
                 
                 const modoToggle = document.getElementById("modoToggle");
                 const darkSalvo = localStorage.getItem("modoDark") === "true";
@@ -3615,7 +3643,9 @@ body.dark-mode .secao.fechada {
 					  mostrarAviso("Ação cancelada!"); // Opcional, mensagem que informa o usuário
 					});
 			</script>
-			
+
+
+
 			
 			
 			
