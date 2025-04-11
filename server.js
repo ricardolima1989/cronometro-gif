@@ -34,9 +34,23 @@ app.post('/api/gerar-gif', async (req, res) => {
     encoder.createReadStream().pipe(outStream);
     encoder.start();
     encoder.setRepeat(-1);            // loop infinito
-    encoder.setDelay(1000 / 20);      // 250ms por frame (4 FPS)
 	encoder.setTransparent(0x00FF00);
-    encoder.setQuality(req.body.quality || 20);  // 1‑30 (1 = melhor)
+	const qualidade = req.body.qualidade || "2"; // padrão = média
+
+	if (qualidade === "1") {
+	  encoder.setQuality(30); // baixa qualidade
+	  encoder.setDelay(1000 / 10);
+	} else if (qualidade === "3") {
+	  encoder.setQuality(10); // alta qualidade
+	  encoder.setDelay(1000 / 25);
+	} else {
+	  encoder.setQuality(20); // média
+	  encoder.setDelay(1000 / 20);
+	}
+
+	
+    // encoder.setQuality(15);           // 1‑30 (1 = melhor)
+	// encoder.setDelay(1000 / 20);          // 250ms por frame (4 FPS)
 
     /* --- canvas buffer --- */
     const canvas = createCanvas(width, height);
