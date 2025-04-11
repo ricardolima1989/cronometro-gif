@@ -2175,8 +2175,15 @@ body.dark-mode .secao.fechada {
                   if (elapsed < tempoTotalSegundos) {
                   requestAnimationFrame(animationLoop);
                 } else {
-                  status.textContent = "Enviando para o servidor...";
-                  gifDownload.innerHTML = "<p>Enviando para o servidor...</p>";
+				status.textContent = "Enviando para o servidor...";
+				let segundosEnvio = 0;
+
+				gifDownload.innerHTML = `<p>Enviando para o servidor... <span id="contadorEnvio">0</span>s</p>`;
+				const contadorInterval = setInterval(() => {
+				  segundosEnvio++;
+				  document.getElementById("contadorEnvio").textContent = segundosEnvio;
+				}, 1000);
+
                 
                   desenharFrame(1, 0); 
                   frames.push(canvas.toDataURL("image/png"));
@@ -2225,11 +2232,12 @@ body.dark-mode .secao.fechada {
                         clearInterval(interval);
                 
                         habilitarControles();
-                
-                      gifDownload.innerHTML = `
-                  <p>GIF gerado com sucesso!</p>
-                  <a href="${gifUrl}" download="cronometro.gif" class="btn-download pulsante">Baixar GIF</a>
-                `;
+				clearInterval(contadorInterval);
+
+				gifDownload.innerHTML = `
+				  <p>✅ GIF gerado com sucesso em <strong>${segundosEnvio}s</strong>!</p>
+				  <a href="${gifUrl}" download="cronometro.gif" class="btn-download pulsante">Baixar GIF</a>
+				`;
                 
                 botaoPreview.style.pointerEvents = "auto";
                 botaoPreview.style.opacity = "1";
