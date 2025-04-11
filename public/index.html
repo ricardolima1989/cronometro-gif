@@ -63,6 +63,11 @@
   border-radius: 8px !important;
 }
 
+body.dark-mode .secao.aberta,
+body.dark-mode .secao.fechada {
+  border-radius: 8px !important;
+}
+
     
     .secao:last-child {
       border-bottom: none;
@@ -506,27 +511,76 @@
       width: 0;
       height: 0;
     }
+	
+	@media (max-width: 600px) {
+  #headerTema {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    gap: 12px !important;
+  }
+
+  .header-center {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 12px !important;
+  }
+
+  .toggles-header {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+  }
+
+  .toggles-header span {
+    white-space: nowrap !important;
+  }
+}
+
+	
+	
     
-    #headerTema {
-      display: flex;
-      justify-content: space-between; 
-      align-items: center;
-      padding: 12px 24px;
-      background-color: #111;
-      color: #fff;
-      position: sticky;
-      top: 0;
-      z-index: 999;
-      border-bottom: 1px solid #333;
-    }
+#headerTema {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background-color: #111;
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  border-bottom: 1px solid #333;
+}
+
+
+
     
-    @media (max-width: 600px) {
-      #headerTema {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-      }
-    }
+	@media (max-width: 600px) {
+	  #headerTema {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 10px;
+	  }
+	  
+	    .toggles-header {
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		width: 100%;
+		gap: 10px;
+	  }
+
+	  .toggles-header span {
+		white-space: nowrap;
+	  }
+	}
+
     
     .switch {
       position: relative;
@@ -658,11 +712,14 @@
       text-shadow: 0 0 5px #cfaaff, 0 0 10px #a066ff, 0 0 20px #8f00ff;
     }
     
-    .header-center {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-    }
+	.header-center {
+	  display: flex;
+	  flex-direction: row;
+	  justify-content: center;
+	  align-items: center;
+	  gap: 16px;
+	  flex-wrap: wrap;
+	}
     
     #headerTema {
       display: flex;
@@ -677,30 +734,32 @@
       border-bottom: 1px solid #333;
     }
     
-    .toggles-header {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-    }
+.toggles-header,
+.premium-switch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+	
+	@media (max-width: 768px) {
+
+  .toggles-header span {
+    font-size: 16px;
+    white-space: nowrap;
+  }
+}
     
     @media (max-width: 600px) {
       #headerTema {
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
-      }
+      
     
-      .toggles-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
       }
     }
     
-    .premium-switch {
-      display: flex;
-      align-items: center;
-    }
     
     .switch {
       position: relative;
@@ -1429,7 +1488,7 @@
                     premiumTexto.textContent = '👑 Você está no modo Premium! ';
                     canvas.classList.remove("marca-dagua");
                   } else {
-                    premiumTexto.textContent = '🌟 Seja Premium para mais vantagens! ➡️';
+                    premiumTexto.textContent = '🌟 Seja Premium! ➡️';
                     canvas.classList.add("marca-dagua");
                   }
                 
@@ -3531,7 +3590,7 @@
                       premiumTexto.textContent = '👑 Você está no modo Premium! ';
                       canvas.classList.remove("marca-dagua");
                     } else {
-                      premiumTexto.textContent = '🌟 Seja Premium para mais vantagens!➡️ ';
+                      premiumTexto.textContent = '🌟 Seja Premium! ➡️';
                       canvas.classList.add("marca-dagua");
                     }
                 
