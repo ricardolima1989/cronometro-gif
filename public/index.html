@@ -1595,7 +1595,8 @@ body.dark-mode .secao.fechada {
 
             <script>
                 const LOGICAL_SIZE = 300;                   
-                const scale = Math.min(window.devicePixelRatio || 1, 2);
+                <!-- const scale = Math.min(window.devicePixelRatio || 1, 2); -->
+				const scale = 1;
                 const canvas = document.getElementById("canvas");
                 canvas.width  = LOGICAL_SIZE * scale;       
                 canvas.height = LOGICAL_SIZE * scale;
@@ -2164,7 +2165,7 @@ body.dark-mode .secao.fechada {
                 
                   desenharFrame(progresso, Math.floor(tempoRestante));
                 
-                  if (timestamp - lastFrameTime >= 50) {
+                  if (timestamp - lastFrameTime >= 100) {
                     frames.push(canvas.toDataURL("image/png"));
                     lastFrameTime = timestamp;
                   }
