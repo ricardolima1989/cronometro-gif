@@ -1366,20 +1366,28 @@
                     });
                   });
                 
-                  const inputTimer = document.getElementById("initialTime");
-                  const dicaErro = document.getElementById("dicaErro");
-                
-                  inputTimer.addEventListener("input", () => {
-                    const valor = inputTimer.value;
-                
-                    if (/^\d*$/.test(valor)) {
-                      inputTimer.classList.remove("error");
-                      dicaErro.style.display = "none";
-                    } else {
-                      inputTimer.classList.add("error");
-                      dicaErro.style.display = "block";
-                    }
-                  });
+					const inputTimer = document.getElementById("initialTime");
+					const dicaErro = document.getElementById("dicaErro");
+
+					inputTimer.addEventListener("input", () => {
+					  // Remove imediatamente qualquer caractere que não seja número
+					  const valorCorrigido = inputTimer.value.replace(/\D/g, '');
+
+					  if (inputTimer.value !== valorCorrigido) {
+						inputTimer.value = valorCorrigido; // corrige automaticamente o valor do campo
+						dicaErro.style.display = "block";  // mostra o alerta
+						inputTimer.classList.add("error"); // estiliza indicando erro
+
+						setTimeout(() => {
+						  dicaErro.style.display = "none";  // esconde após 2 segundos automaticamente
+						  inputTimer.classList.remove("error");
+						}, 2000);
+					  } else {
+						dicaErro.style.display = "none";  // esconde o alerta caso tudo esteja certo
+						inputTimer.classList.remove("error");
+					  }
+					});
+
                 
                   tempoTotal = +document.getElementById("initialTime").value || 30;
                   resetarPadroes();
