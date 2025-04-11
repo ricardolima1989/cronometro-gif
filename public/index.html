@@ -1046,10 +1046,19 @@ body.dark-mode .secao.fechada {
                     <h2>Configuração do Círculo</h2>
                     <div class="conteudo-secao">
                         <div class="grupo">
-                            <div class="linha-check">
-                                <input type="checkbox" id="circuloTransparente" onchange="atualizarCampo('circulo')">
-                                <label for="circuloTransparente">Círculo transparente</label>
-                            </div>
+						
+
+							
+							<div class="linha-check">
+								  <label for="circuloTransparente">Círculo transparente</label>
+								  <label class="switch">
+									<input type="checkbox" id="circuloTransparente" onchange="atualizarCampo('circulo')">
+									<span class="slider"></span>
+								  </label>
+								</div>
+
+							
+							
                             <label>Cor do círculo:</label>
                             <div class="linha-color">
                                 <input type="color" id="corCirculo" value="#4A90E2" />
@@ -1094,10 +1103,14 @@ body.dark-mode .secao.fechada {
                     <h2>Configuração da Borda</h2>
                     <div class="conteudo-secao">
                         <div class="grupo">
-                            <div class="linha-check">
-                                <input type="checkbox" id="bordaTransparente" onchange="atualizarCampo('borda')">
-                                <label for="bordaTransparente">Borda transparente</label>
-                            </div>
+						<div class="linha-check">
+						  <label for="bordaTransparente">Borda transparente</label>
+						  <label class="switch">
+							<input type="checkbox" id="bordaTransparente" onchange="atualizarCampo('borda')">
+							<span class="slider"></span>
+						  </label>
+						</div>
+
                             <label>Cor da borda:</label>
                             <div class="linha-color">
                                 <input type="color" id="corBorda" value="#2E2E2E" />
@@ -1151,6 +1164,11 @@ body.dark-mode .secao.fechada {
                                 <input type="color" id="corTexto" value="#ffffff" />
                                 <input type="text" id="hexTexto" value="#ffffff" />
                             </div>
+							<div class="grupo">
+							  <label for="opacidadeTexto">Transparência do texto: <span id="displayOpacidadeTexto">1.0</span></label>
+							  <input type="range" id="opacidadeTexto" min="0.1" max="1" step="0.1" value="1" />
+							</div>
+							
                         </div>
                         <div class="grupo">
                             <label for="tamanhoTexto">Tamanho do texto: <span id="displayTamanhoTexto">90</span> px</label>
@@ -1190,10 +1208,14 @@ body.dark-mode .secao.fechada {
                     <h2>Configuração do Fundo</h2>
                     <div class="conteudo-secao">
                         <div class="grupo">
-                            <div class="linha-check">
-                                <input type="checkbox" id="fundoTransparente" checked onchange="atualizarCampo('fundo')">
-                                <label for="fundoTransparente">Fundo transparente</label>
-                            </div>
+						<div class="linha-check">
+						  <label for="fundoTransparente">Fundo transparente</label>
+						  <label class="switch">
+							<input type="checkbox" id="fundoTransparente" checked onchange="atualizarCampo('fundo')">
+							<span class="slider"></span>
+						  </label>
+						</div>
+
                             <label>Cor do fundo:</label>
                             <div class="linha-color">
                                 <input type="color" id="corFundo" value="#000000" disabled />
@@ -1201,10 +1223,14 @@ body.dark-mode .secao.fechada {
                             </div>
                         </div>
                         <div class="grupo">
-                            <div class="linha-check">
-                                <input type="checkbox" id="fundoContornoAtivo" onchange="toggleContorno('fundo')">
-                                <label for="fundoContornoAtivo">Ativar contorno do fundo</label>
-                            </div>
+							<div class="linha-check">
+							  <label for="fundoContornoAtivo">Ativar contorno do fundo</label>
+							  <label class="switch">
+								<input type="checkbox" id="fundoContornoAtivo" onchange="toggleContorno('fundo')">
+								<span class="slider"></span>
+							  </label>
+							</div>
+
                         </div>
                         <div id="grupoFundoContorno" style="display: none;">
                             <div class="grupo">
@@ -1234,10 +1260,14 @@ body.dark-mode .secao.fechada {
                     <h2>Configuração da Sombra</h2>
                     <div class="conteudo-secao">
                         <div class="grupo">
-                            <div class="linha-check">
-                                <input type="checkbox" id="sombraTransparente" onchange="toggleSombra()">
-                                <label for="sombraTransparente">Sombra transparente</label>
-                            </div>
+							<div class="linha-check">
+							  <label for="sombraTransparente">Sombra transparente</label>
+							  <label class="switch">
+								<input type="checkbox" id="sombraTransparente" onchange="toggleSombra()">
+								<span class="slider"></span>
+							  </label>
+							</div>
+
                             <label>Cor da sombra:</label>
                             <div class="linha-color">
                                 <input type="color" id="corSombra" value="#000000" />
@@ -1338,14 +1368,6 @@ body.dark-mode .secao.fechada {
 								  </label>
 								</div>
 								
-								  <!-- LINHA 2: Remover marca d’água -->
-								  <!-- <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;"> -->
-									<!-- <span>💧 Remover marca d’água ➡️</span> -->
-									<!-- <label class="switch"> -->
-									  <!-- <input type="checkbox" id="removerMarcaToggle"> -->
-									  <!-- <span class="slider"></span> -->
-									<!-- </label> -->
-								  <!-- </div> -->
 								  
 								  <div id="linhaRemoverMarca" style="display: none; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
 								  <span>💧 Remover marca d’água ➡️</span>
@@ -1654,6 +1676,7 @@ body.dark-mode .secao.fechada {
                 
                 const binds = [
                   ["tamanhoTexto", "displayTamanhoTexto"],
+				  ["opacidadeTexto", "displayOpacidadeTexto"],
                   ["tamanhoObjetoCentral", "displayTamanhoObjetoCentral"],
                   ["grossuraBordaContorno", "displayGrossuraBordaContorno"],
                   ["grossuraCirculoContorno", "displayGrossuraCirculoContorno"],
@@ -2038,12 +2061,14 @@ body.dark-mode .secao.fechada {
                 }
                 
                   ctx.restore();
-                
                   ctx.font = `bold ${tamanhoTexto}px Arial`;
-                  ctx.fillStyle = corTexto;
                   ctx.textAlign = "center";
                   ctx.textBaseline = "middle";
-                  ctx.fillText(`${Math.ceil(tempoRestante)}`, centro, centro);
+				  ctx.fillStyle = corTexto;
+					ctx.globalAlpha = parseFloat(document.getElementById("opacidadeTexto").value);
+					ctx.fillText(`${Math.ceil(tempoRestante)}`, centro, centro);
+					ctx.globalAlpha = 1.0;
+
                 
                 if (!modoPremiumToggle.checked) {  
                     ctx.save();
@@ -2309,6 +2334,8 @@ body.dark-mode .secao.fechada {
                   document.getElementById("hexTexto").value = "#0F172A";
                   document.getElementById("tamanhoTexto").value = 88;
                   document.getElementById("displayTamanhoTexto").textContent = 88;
+				  document.getElementById("opacidadeTexto").value = 1;
+				  document.getElementById("displayOpacidadeTexto").textContent = 1;
                   document.getElementById("textoContornoAtivo").checked = true;
                   document.getElementById("grupoTextoContorno").style.display = "block";
                   document.getElementById("corTextoContorno").value = "#FACC15"; 
