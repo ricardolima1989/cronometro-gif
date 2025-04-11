@@ -2112,6 +2112,9 @@ body.dark-mode .secao.fechada {
                 }
                 
                 function iniciarContagem() {
+				
+				let contadorInterval;
+				let segundosEnvio = 0;
                 
                 const tempoInicial = parseInt(document.getElementById('initialTime').value);
                 
@@ -2176,13 +2179,17 @@ body.dark-mode .secao.fechada {
                   requestAnimationFrame(animationLoop);
                 } else {
 				status.textContent = "Enviando para o servidor...";
-				let segundosEnvio = 0;
-
+				
+				segundosEnvio = 0;
 				gifDownload.innerHTML = `<p>Enviando para o servidor... <span id="contadorEnvio">0</span>s</p>`;
-				const contadorInterval = setInterval(() => {
+				contadorInterval = setInterval(() => {
 				  segundosEnvio++;
-				  document.getElementById("contadorEnvio").textContent = segundosEnvio;
+				  const span = document.getElementById("contadorEnvio");
+				  if (span) span.textContent = segundosEnvio;
 				}, 1000);
+
+				
+				
 
                 
                   desenharFrame(1, 0); 
@@ -2234,10 +2241,12 @@ body.dark-mode .secao.fechada {
                         habilitarControles();
 				clearInterval(contadorInterval);
 
+				clearInterval(contadorInterval);
 				gifDownload.innerHTML = `
 				  <p>✅ GIF gerado com sucesso em <strong>${segundosEnvio}s</strong>!</p>
 				  <a href="${gifUrl}" download="cronometro.gif" class="btn-download pulsante">Baixar GIF</a>
 				`;
+
                 
                 botaoPreview.style.pointerEvents = "auto";
                 botaoPreview.style.opacity = "1";
