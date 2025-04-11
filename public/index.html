@@ -1403,6 +1403,12 @@ body.dark-mode .secao.fechada {
 									<span class="slider"></span>
 								  </label>
 								</div>
+								
+								<div class="grupo" style="margin-top: 10px;">
+							  <label for="qualidadeGif">Qualidade do GIF: <span id="displayQualidade">Média</span></label>
+							  <input type="range" id="qualidadeGif" min="1" max="3" step="1" value="2">
+							</div>
+
 
 
 
@@ -1610,6 +1616,58 @@ body.dark-mode .secao.fechada {
                 const gifDownload = document.getElementById("gifDownload");
                 let frames = [];
                 let tempoTotal = parseInt(document.getElementById("initialTime").value) || 30;
+				
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				
+const qualidadeSlider = document.getElementById("qualidadeGif");
+const displayQualidade = document.getElementById("displayQualidade");
+
+// Valores padrão
+let LOGICAL_SIZE = 300;
+let ENCODER_QUALITY = 20;
+let FRAME_DELAY = 50;
+
+function atualizarQualidade() {
+  const nivel = parseInt(qualidadeSlider.value);
+
+  if (nivel === 1) {
+    LOGICAL_SIZE = 200;
+    ENCODER_QUALITY = 30;
+    FRAME_DELAY = 80;
+    displayQualidade.textContent = "Baixa";
+  } else if (nivel === 2) {
+    LOGICAL_SIZE = 300;
+    ENCODER_QUALITY = 20;
+    FRAME_DELAY = 50;
+    displayQualidade.textContent = "Média";
+  } else if (nivel === 3) {
+    LOGICAL_SIZE = 400;
+    ENCODER_QUALITY = 10;
+    FRAME_DELAY = 35;
+    displayQualidade.textContent = "Alta";
+  }
+
+  // Atualiza resolução do canvas
+  const scale = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width  = LOGICAL_SIZE * scale;
+  canvas.height = LOGICAL_SIZE * scale;
+  canvas.style.width = LOGICAL_SIZE + "px";
+  canvas.style.height = LOGICAL_SIZE + "px";
+  ctx.scale(scale, scale);
+
+  desenharFrame(0, tempoTotal);
+}
+
+qualidadeSlider.addEventListener("input", atualizarQualidade);
+
+				
+				
+				
+				
+				
+				
+				
+				
                 let sombraAnterior = "#000000";
                 
                 const hex = id => document.getElementById(`hex${id}`).value || "transparent";
@@ -2213,13 +2271,14 @@ body.dark-mode .secao.fechada {
                 }
                 
                 function enviarParaServidor(frames) {
-                  fetch('/api/gerar-gif', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ frames })
-                  })
+									  fetch('/api/gerar-gif', {
+					  method: 'POST',
+					  headers: {
+						'Content-Type': 'application/json',
+					  },
+					  body: JSON.stringify({ frames, quality: ENCODER_QUALITY })
+					})
+
                   .then(response => response.json())
                   .then(data => {
                 
