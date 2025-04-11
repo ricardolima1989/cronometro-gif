@@ -47,15 +47,29 @@
       margin: 0;
       padding: 0;
       border-bottom: 1px solid #ddd;
-      border-radius: 0;
+  border-radius: 8px !important;
       background-color: #f9f9f9;
     }
+	
+	.secao {
+  border-radius: 8px !important;
+}
+
+.secao.aberta {
+  border-radius: 8px !important;
+}
+
+.secao.fechada {
+  border-radius: 8px !important;
+}
+
     
     .secao:last-child {
       border-bottom: none;
     }
     
     .secao h2 {
+	  border-radius: 8px;
       margin: 0;
       padding: 10px 12px;
       background-color: #eaeaea;
@@ -63,7 +77,6 @@
       font-weight: bold;
       color: #333;
       border: none;
-      border-radius: 0;
       line-height: 1.2;
     }
     
@@ -314,6 +327,7 @@
     }
     
         .secao h2 {
+		border-radius: 8px;
         cursor: pointer;
         user-select: none;
         position: relative;
@@ -359,19 +373,24 @@
       display: none;
       margin-top: 4px;
     }
-    
-    .secao h2:hover {
-      background: linear-gradient(90deg, #ff6a00, #ee0979);
-      color: #fff;
-      border-radius: 8px;
-      padding: 8px;
-      box-shadow: 0 0 12px rgba(255, 105, 180, 0.7), 0 0 25px rgba(255, 105, 180, 0.5);
-      letter-spacing: 1px;
-      transition: all 0.3s ease;
-      text-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
-      cursor: pointer;
-      animation: brilhoGlow 1.2s infinite alternate;
-    }
+	
+	
+	.secao h2:hover {
+		  border-radius: 8px;
+  background: linear-gradient(90deg, #ff6a00, #ee0979);
+  color: inherit;
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: none;
+  letter-spacing: normal;
+  transition: none;
+  text-shadow: none;
+  cursor: pointer;
+  animation: none;
+  transform: none;
+}
+
+
     
     @keyframes brilhoGlow {
       0% {
@@ -583,6 +602,7 @@
     }
     
     body.dark-mode .secao h2 {
+		  border-radius: 8px;
       margin: 0 !important;
       padding: 10px 12px !important;
       background-color: #1b0f2e;
@@ -594,6 +614,7 @@
     }
     
     body.dark-mode .secao.aberta h2 {
+		  border-radius: 8px;
       color: #ffd86a !important;
       background-color: #25113f;
       text-shadow: 0 0 6px rgba(255, 216, 106, 0.4);
@@ -1251,6 +1272,13 @@
 
                 <!-- Coluna 4: Pré-visualização e GIF final para download -->
                 <div class="col preview">
+				                        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            <span>🌟Fundo transparente?➡️</span>
+                            <label class="switch">
+                                <input type="checkbox" id="fundoTransparenteAtalho">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     <div class="secao">
                         <canvas id="canvas" width="500" height="500" style="width:300px;height:300px;"></canvas>
 
@@ -1260,13 +1288,7 @@
                         <br>
                         <br>
 
-                        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                            <span>🌟Fundo transparente?➡️</span>
-                            <label class="switch">
-                                <input type="checkbox" id="fundoTransparenteAtalho">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
+
                         <br>
 
                         <div class="botoes-acoes">
@@ -1282,7 +1304,7 @@
 
                     </div>
                     <div class="secao">
-                        <h3>GIF Final para Download</h3>
+                        <h3>⬇️ GIF Final Download ⬇️</h3>
                         <div id="gifDownload">
                             <p>Aguardando...</p>
 
