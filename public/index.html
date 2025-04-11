@@ -286,10 +286,13 @@ body.dark-mode .secao.fechada {
         text-align: center;
         margin-bottom: 20px;
       }
-      canvas {
-        max-width: 100%;
-        height: auto;
-      }
+		canvas {
+		  width: 100% !important;
+		  height: auto !important;
+		  aspect-ratio: 1 / 1;
+		  display: block;
+		  margin: 0 auto;
+		}
     }
     
     .secao.destaque {
@@ -1568,8 +1571,7 @@ body.dark-mode .secao.fechada {
 
             <script>
                 const LOGICAL_SIZE = 300;                   
-                const scale = window.devicePixelRatio || 2; 
-                
+                const scale = Math.min(window.devicePixelRatio || 1, 2);
                 const canvas = document.getElementById("canvas");
                 canvas.width  = LOGICAL_SIZE * scale;       
                 canvas.height = LOGICAL_SIZE * scale;
